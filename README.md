@@ -1,2 +1,2 @@
 # myjQuery
-原生js实现jQuery
+2017年6月25日学习完JavaScript面向对象编程，借此机会使用JavaScript实现一个简易版本的jQuery
