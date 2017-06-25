@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		var obj1 = { personName: "John", location: {city: "Boston",county:"USA"} };
+		var obj2 = { last: "Resig", location: {state: "MA",county:"China"} };
+		/*测试合并两个对象，不进行深度合并
+		var newjQuery =  $.extend(false,obj1,obj2);
+		console.log(newjQuery);
+		*/
+		/*测试合并两个对象，进行深度合并
+		var newjQuery =  $.extend(true,obj1,obj2);
+		console.log(newjQuery);
+		*/
+		/*测试将对象合并到当前对象*/
+		/*var newjQuery = $.extend(obj1);
+		console.log(newjQuery);*/
+		/*测试将对象合并到jQuery原型对象*/
+		var newjQuery = $.fn.extend(obj1);
+		console.log(newjQuery);
+	</script>
+</body>
+</html>
