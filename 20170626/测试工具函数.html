@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+<div id="test"></div>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		var obj = {},
+			obj1 = {name: "张三",age: "23"},
+			arr = [1,"das","2",false],
+			obj2 = {name: "李四", "0": "a", "1": "bc", "2": false, "length": 3};
+		//测试是否是数组
+		/*console.log($.isArray(arr));
+		console.log($.isArray("arr"));*/
+		//测试是否是数组或伪数组
+		/*console.log($.isLikeArray(arr));
+		console.log($.isLikeArray(obj1));
+		console.log($.isLikeArray(obj2));*/
+		//测试是否是window对象
+		/*console.log($.isWindow(arr));
+		console.log($.isWindow(obj1));
+		console.log($.isWindow(window));*/
+		//测试是否是数字 
+		/*console.log($.isNumber("123arr"));
+		console.log($.isNumber(234));
+		console.log($.isNumber("234"));*/
+		//测试是否是dom元素 
+		/*console.log($.isElement(obj2));
+		console.log($.isElement(arr));
+		console.log($.isElement(document.getElementById("test")));*/
+		//测试是否是函数
+		/*console.log($.isFunction(obj2));
+		console.log($.isFunction(function (){}));*/
+		//测试获取指定元素在指定数组中的位置
+		/*console.log($.inArray(arr, 2));
+		console.log($.inArray(arr, "2"));
+		console.log($.inArray(arr, false));*/
+		//获取数据类型
+		/*console.log($.type(obj2));
+		console.log($.type(function (){}));
+		console.log($.type(123));
+		console.log($.type("123"));
+		console.log($.type("abc"));*/
+		//获取是否是空对象
+		console.log($.isEmptyObject(obj2));
+		console.log($.isEmptyObject({}));
+		console.log($.isEmptyObject(123));
+	</script>
+</body>
+</html>

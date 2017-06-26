@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<ul>
+		<li>我是第1个li元素</li>
+		<li>我是第2个li元素</li>
+		<li>我是第3个li元素</li>
+		<li>我是第4个li元素</li>
+	</ul>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		var arr = [1,4,35,-45,45,0,4,46,67],
+			obj = {
+				"A": 1,
+				"B": 2,
+				"c": 3
+			};
+		console.log($.grep(arr, function (i,val){
+			return val > 40;
+		}));
+		console.log($.grep(obj, function (i,val){
+			return val > 0 && val < 3;
+		}));
+	</script>
+</body>
+</html>

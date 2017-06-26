@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<ul>
+		<li>我是第1个li元素</li>
+		<li>我是第2个li元素</li>
+		<li>我是第3个li元素</li>
+		<li>我是第4个li元素</li>
+	</ul>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		var arr = [1,2,"erewr",true],
+			obj = {
+				"0": "Adf",
+				"1": 23432,
+				"2": function (){},
+				"3": arr,
+				"length": 4
+			},
+			lis = document.getElementsByTagName("li");
+		console.log($.toArray(arr));
+		console.log($.toArray(obj));
+		console.log($.toArray(lis));
+		console.log($.toArray(123));
+		console.log($.toArray("asdfd"));
+	</script>
+</body>
+</html>

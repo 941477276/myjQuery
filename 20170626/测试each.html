@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<ul>
+		<li>我是第1个li元素</li>
+		<li>我是第2个li元素</li>
+		<li>我是第3个li元素</li>
+		<li>我是第4个li元素</li>
+	</ul>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		var arr = [1,"abc",{name: "李四"},function (){console.log("我是一个匿名函数！");}],
+			eleLis = document.getElementsByTagName("li"),
+			obj = {
+				"a": "123",
+				"ul": document.getElementsByTagName("ul")[0],
+				"arr": arr
+			}
+		/*$.each(arr, function (i, item){
+			console.log("当前索引：" + i);
+			console.log(item);
+			console.log(this);
+		});*/
+
+		/*$.each(obj, function (i, val){
+			console.log(this);
+			console.log(val);
+		});*/
+
+		var returnvalue = $.each(eleLis, function (i, item){
+			console.log("当前索引：" + i);
+			console.log(item);
+			console.log(this);
+		});
+		console.log(returnvalue);
+
+
+	</script>
+</body>
+</html>
