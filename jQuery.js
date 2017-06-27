@@ -86,9 +86,6 @@
 				return (str + "").replace(/^(\s|\u00A0)+/,'').replace(/(\s|\u00A0)+$/,'');
 			}
 		},
-		each: function (){
-
-		},
 		/*判断传入的参数是否是字符串*/
 		isString: function (str){
 			return typeof str;
@@ -99,7 +96,7 @@
 		},
 		/*判断传入的参数是否是数组或伪数组*/
 		isLikeArray: function (obj){
-
+			return (typeof obj === "object") && !jQuery.isWindow(obj) && obj.length && (typeof obj[obj.length - 1] !== "undefined");
 		},
 		/*判断传入的参数是否是window对象*/
 		isWindow: function (obj){
@@ -107,35 +104,135 @@
 		},
 		/*判断传入的参数是否是数字*/
 		isNumber: function (num){
-
+			return num && !isNaN(parseFloat(num)) && isFinite(num);
 		},
 		/*判断传入的参数是否是元素*/
 		isElement: function (ele){
-			return ele && ele.nodeType && ele.nodeName;
+			return ele && isFinite(ele.nodeType) && (ele.nodeName !== undefined);
 		},
 		/*判断传入的参数是否是函数*/
 		isFunction: function (fn){
-			return fn && call_toString.call(fn) === "[object Function]";
+			return call_toString.call(fn) === "[object Function]";
 		},
 		/*获取传入的参数的数据类型*/
 		type: function (data){
 			//Boolean Number String Function Array Date RegExp Object
-
+			return returnTypes[jQuery.inArray(types, call_toString.call(data))];
 		},
 		/*判断传入的参数是否是空对象*/
 		isEmptyObject: function (obj){
 			var name;
-			if(!obj){
-				return false;
-			}
 			//如果对象不是空的，则会进入这个循环中
 			for(name in obj){
-				return true;
+				return false;
 			}
-			return false;
+			return true;
 		}
 	});
-
+	/*操作数组或伪数组*/
+	jQuery.extend({
+		/*获取指定元素在指定数组中的位置*/
+		inArray: function (arr,target){
+			if(!jQuery.isArray(arr)){
+				return -1;
+			}
+			if(arr.indexOf){
+				return arr.indexOf(target);
+			}else{
+				for (var i = 0,len = arr.length; i < len; i++) {
+					if(arr[i] === target){
+						return i;
+					}
+				}
+			}
+			return -1;
+		},
+		/*遍历数组的每一项并执行回调函数*/
+		each: function (obj,fn){
+			if(!obj || (typeof obj !== "object")){
+				throw "必须传递需要遍历的对象或数组！";
+			}
+			if(!fn || !jQuery.isFunction(fn)){
+				throw "必须传递一个回调函数！";
+			}
+			if(jQuery.isLikeArray(obj)){
+				for (var i = 0,len = obj.length; i < len; i++) {
+					var val = obj[i];
+					if(fn.call(val, i, val) === false){
+						break;
+					}
+				}
+			}else{
+				for (var i in obj) {
+					var val = obj[i];
+					if(fn.call(val, i, val) === false){
+						break;
+					}
+				}
+			}
+			return obj;
+		},
+		/*过滤数组中的元素，如果回调函数返回false，那么就把该项过滤掉，
+		如果该函数返回true，那么就把该项放入到一个新的数组中，最终返回一个新的数组*/
+		grep: function (obj,fn){
+			if(!obj || (typeof obj !== "object")){
+				throw "必须传递需要遍历的对象或数组！";
+			}
+			if(!fn || !jQuery.isFunction(fn)){
+				throw "必须传递一个回调函数！";
+			}
+			var ret = [];
+			if(jQuery.isLikeArray(obj)){
+				for (var i = 0,len = obj.length; i < len; i++) {
+					var val = obj[i];
+					if(fn.call(val, i, val) === true){
+						ret.push(val);
+					}
+				}
+			}else{
+				for (var i in obj) {
+					var val = obj[i];
+					if(fn.call(val, i, val) === true){
+						ret.push(val);
+					}
+				}
+			}
+			return ret;
+		},
+		/*遍历一个数组或对象，然后把遍历到的key和value传递给回调函数，
+		并把回调函数的返回值收集起来装到一个数组中并返回该数组*/
+		map: function (obj, fn){
+			if(!obj || (typeof obj !== "object")){
+				throw "必须传递需要遍历的对象或数组！";
+			}
+			if(!fn || !jQuery.isFunction(fn)){
+				throw "必须传递一个回调函数！";
+			}
+			var ret = [];
+			if(jQuery.isLikeArray(obj)){
+				for (var i = 0,len = obj.length; i < len; i++) {
+					var val = obj[i];
+					ret.push(fn.call(val, i, val));
+				}
+			}else{
+				for (var i in obj) {
+					var val = obj[i];
+					ret.push(fn.call(val, i, val));
+				}
+			}
+			return ret;
+		},
+		/*将一个伪数组转成真数组*/
+		toArray: function (likeArray){
+			if(typeof likeArray === "object" && !jQuery.isWindow(likeArray)){
+				return call_slice.call(likeArray);
+			}else{
+				return [likeArray];
+			}
+		},
+		/*合并多个数组或伪数组*/
+		merge: function (){}
+	});
 	/*jQuery构造函数*/
 	var init = jQuery.fn.init = function (selector){
 
