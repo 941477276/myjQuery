@@ -225,17 +225,59 @@
 		/*将一个伪数组转成真数组*/
 		toArray: function (likeArray){
 			if(typeof likeArray === "object" && !jQuery.isWindow(likeArray)){
-				return call_slice.call(likeArray);
+				try{
+					return call_slice.call(likeArray);
+				}catch(e){
+					/*IE8在将dom对象组成的伪数组通过call调用Array.prototype.slice时会报错，因此
+						需要做额外处理*/
+					return call_slice.call( [].concat.apply([], likeArray).slice(0));
+				}
 			}else{
 				return [likeArray];
 			}
-		},
-		/*合并多个数组或伪数组*/
-		merge: function (){}
+		}
 	});
-	/*jQuery构造函数*/
+	/*jQuery构造函数，入口函数*/
 	var init = jQuery.fn.init = function (selector){
+		var that = this;
+		/*如果传入的是""、false、undefined、null等转换后为false的值直接返回this*/
+		if(!selector){return this;}
+		/*处理传递字符串*/
+		if(typeof selector === "string" && !jQuery.isNumber(selector)){
+			//判断是否是HTML片段，如果是则生成dom元素
+			if(selector.charAt(0) === "<" && selector.charAt(selector.length - 1) === ">" && selector.length >= 3){
+				var div = document.createElement("div");
+				div.innerHTML = selector;
 
+				call_push.apply(that, jQuery.toArray(div.children));
+			}else{
+				//如果不是HTML片段则当做选择器来处理
+				if(selector.charAt(0) === "#"){
+					console.log(document.getElementById(selector.substr(1)));
+					call_push.apply(that, [document.getElementById(selector.substr(1))]);
+				}else{
+					call_push.apply(that, jQuery.toArray(document.querySelectorAll(selector)));
+				}
+			}
+			that.prevObject = {"0": document,"length": 1};
+			return this;
+		}
+		/*处理传递对象，数组，伪数组*/
+		if(jQuery.isLikeArray(selector)){
+			call_push.apply(that, jQuery.toArray(selector));
+			if(!jQuery.isArray(selector)){
+				that.prevObject = {"0": document,"length": 1};
+			}
+			return this;
+		}
+		/*处理传递dom对象或其他基本数据类型*/
+		if(selector){
+			call_push.apply(that,[selector]);
+			if(selector.nodeType && selector.nodeName){
+				that.prevObject = {"0": document,"length": 1};
+			}
+			return this;
+		}
 	}
 	/*将init的原型对象设置为jQuery.fn的原因是为了方便对外编写插件*/
 	init.prototype = jQuery.fn;

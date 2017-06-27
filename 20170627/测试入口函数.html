@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<ul>
+		<li class="item">我是第1个li元素</li>
+		<li class="item">我是第2个li元素</li>
+		<li class="item">我是第3个li元素</li>
+		<li class="item">我是第4个li元素</li>
+	</ul>
+	<div id="test"></div>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		//测试动态生成HTML
+		/*console.log($("<div style='width: 100%;height: 100px;'>我是动态创建的div</div><span>我是动态创建的span</span>"));
+		console.log($("<img src='../images/icons.png' />"));
+		console.log($("<a>我是a标签</a>"));*/
+		//测试获取元素
+		/*console.log($("ul"));
+		console.log($(".item"));
+		console.log($("ul .item"));
+		console.log($("#test"));*/
+		//测试传递数组或伪数组
+		var arr = [2,4,"dsf",true],
+			eles = document.querySelectorAll(".item"),
+			obj = {name: "张三",age: 23},
+			obj1 = {"0": "sdf","1": "Fwe","2": 45,"length": 3};
+		console.log($(arr));
+		console.log($(eles));
+		console.log($(obj));
+		console.log($(obj1));
+		//测试传递其他参数
+		/*console.log($(document.getElementById("test")));
+		console.log($("eles"));
+		console.log($(245));
+		console.log($(true));
+		console.log($(0));
+		console.log($(undefined));
+		console.log($(null));
+		console.log($(-1));*/
+	</script>
+</body>
+</html>
