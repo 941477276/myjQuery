@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<titleDocument/title>
+</head>
+<body>
+	<a href=""></a>
+	<abbr title=""></abbr>
+	<address></address>
+	<acronym title=""></acronym>
+	<area shape="" coords="" href="" alt="" />
+	<article></article>
+	<aside>	</aside>
+	<audio src=""></audio>
+	<b></b>
+	<base href="" />
+	<basefont />
+	<bdi></bdi>
+	<bdo dir=""></bdo>		
+	<blockquote></blockquote>
+	<br />
+	<button></button>
+	<canvas></canvas>
+	<caption></caption>
+	<cite></cite>
+	<code></code>
+	<col />
+	<colgroup></colgroup>
+	<command />
+	<datalist></datalist>
+	<dd></dd>
+	<del></del>
+	<details></details>
+	<dfn></dfn>	
+	<div></div>
+	<dl></dl>
+	<dt></dt>
+	<em></em>
+	<embed src="" type="" />
+	<fieldset></fieldset>
+	<figcaption></figcaption>
+	<figure></figure>	
+	<footer></footer>
+	<form action=""></form>
+	<frame />		
+	<h1></h1>
+	<h6></h6>
+	<header></header>
+	<hgroup></hgroup>
+	<hr />
+	<i></i>
+	<iframe src="" frameborder="0"></iframe>
+	<img src="" alt="" />
+	<input type="text" />
+	<ins></ins>
+	<keygen />
+	<kbd></kbd>
+	<label for=""></label>
+	<legend></legend>
+	<li></li>
+	<link rel="stylesheet" href="" />
+	<map name=""></map>
+	<mark></mark>
+	<menu></menu>
+	<meter></meter>
+	<nav></nav>	
+	<noscript></noscript>
+	<object data="" type=""></object>
+	<ol></ol>
+	<optgroup></optgroup>
+	<option value=""></option>
+	<output></output>
+	<p></p>
+	<param name="" value="" />
+	<pre></pre>
+	<progress></progress>
+	<q></q>
+	<rp></rp>
+	<ruby></ruby>
+	<s></s>
+	<samp></samp>
+	<script></script>
+	<select name="" id=""></select>
+	<small></small>
+	<source />
+	<span></span>
+	<strong></strong>
+	<style></style>
+	<sub></sub>
+	<summary></summary>
+	<sup></sup>
+	<table></table>
+	<tbody></tbody>
+	<td></td>
+	<textarea name="" id="" cols="30" rows="10"></textarea>
+	<tfoot></tfoot>
+	<th></th>
+	<thead></thead>
+	<time></time>
+	<tr></tr>
+	<track></track>
+	<u></u>
+	<ul></ul>
+	<var></var>
+	<video src=""></video>
+	<wbr></wbr>
+	<rt></rt>
+	<section></section>
+	<script>
+		var all = document.getElementsByTagName("*");
+		for(var i = 0,len = all.length; i < len; i ++){
+			/*if(!all[i].getElementById){
+				//所有元素都不支持getElementById
+				console.log(all[i].nodeName.toLowerCase() + ": 不支持 getElementById");
+			}*/
+			if(!all[i].getElementsByTagName){
+				console.log(all[i].nodeName.toLowerCase() + ": 不支持 getElementsByTagName");
+			}
+			/*if(!all[i].getElementsByClass){
+				//所有元素都不支持getElementsByClass
+				console.log(all[i].nodeName.toLowerCase() + ": 不支持 getElementsByClass");
+			}*/
+			if(!all[i].querySelector){
+				console.log(all[i].nodeName.toLowerCase() + ": 不支持 querySelector");
+			}
+			if(!all[i].querySelectorAll){
+				console.log(all[i].nodeName.toLowerCase() + ": 不支持 querySelectorAll");
+			}
+		}
+	</script>
+</body>
+</html>
