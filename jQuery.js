@@ -1,7 +1,7 @@
 ;(function (window,document,undefined){
 	/*jQuery工厂函数*/
-	function jQuery(selector){
-		return new jQuery.fn.init(selector);
+	function jQuery(selector,prevObject){
+		return new jQuery.fn.init(selector,prevObject);
 	}
 	var call_push = Array.prototype.push,
 		call_slice = Array.prototype.slice,
@@ -208,7 +208,8 @@
 			if(!fn || !jQuery.isFunction(fn)){
 				throw "必须传递一个回调函数！";
 			}
-			var ret = [];
+			var ret = [],
+				arr = jQuery.toArray(obj);
 			if(jQuery.isLikeArray(obj)){
 				for (var i = 0,len = obj.length; i < len; i++) {
 					var val = obj[i];
@@ -238,7 +239,7 @@
 		}
 	});
 	/*jQuery构造函数，入口函数*/
-	var init = jQuery.fn.init = function (selector){
+	var init = jQuery.fn.init = function (selector,prevObject){
 		var that = this;
 		/*如果传入的是""、false、undefined、null等转换后为false的值直接返回this*/
 		if(!selector){return this;}
@@ -253,7 +254,6 @@
 			}else{
 				//如果不是HTML片段则当做选择器来处理
 				if(selector.charAt(0) === "#"){
-					console.log(document.getElementById(selector.substr(1)));
 					call_push.apply(that, [document.getElementById(selector.substr(1))]);
 				}else{
 					call_push.apply(that, jQuery.toArray(document.querySelectorAll(selector)));
@@ -265,16 +265,16 @@
 		/*处理传递对象，数组，伪数组*/
 		if(jQuery.isLikeArray(selector)){
 			call_push.apply(that, jQuery.toArray(selector));
-			if(!jQuery.isArray(selector)){
-				that.prevObject = {"0": document,"length": 1};
-			}
+			var prevObject = prevObject || {"0": document,"length": 1}
+			that.prevObject = prevObject;
 			return this;
 		}
 		/*处理传递dom对象或其他基本数据类型*/
 		if(selector){
 			call_push.apply(that,[selector]);
 			if(selector.nodeType && selector.nodeName){
-				that.prevObject = {"0": document,"length": 1};
+				var prevObject = prevObject || {"0": document,"length": 1}
+				that.prevObject = prevObject;
 			}
 			return this;
 		}
@@ -282,7 +282,62 @@
 	/*将init的原型对象设置为jQuery.fn的原因是为了方便对外编写插件*/
 	init.prototype = jQuery.fn;
 
-
+	/*筛选选折器*/
+	jQuery.fn.extend({
+		each: function (fn){
+			if(!fn || !jQuery.isFunction(fn)){
+				throw "必须传递一个回调";
+			}
+			return jQuery.each(this, fn);
+		},
+		/*获取元素集合中指定index的元素*/
+		eq: function (index){
+			return jQuery(this.get(index), this);
+		},
+		/*获取元素集合中指定index的dom元素*/
+		get: function (index){
+			var _index = isNaN(index * 1) ? 0 : (index < 0 ? (this.length + index) : index);
+			_index > (this.length - 1) ? (this.length - 1) : _index;
+			return this[_index];
+		},
+		/*筛选指定表达式的元素*/
+		filter: function (express){
+			var eles = jQuery(express),
+				that = this,
+				ret = [];
+			that.each(function(index, ele) {
+				eles.each(function(index2, ele2) {
+					if(ele === ele2){
+						ret.push(ele);
+					}
+				});
+			});
+			if(ret.length == 0){
+				ret = undefined;
+			}
+			return jQuery(ret);
+		},
+		first: function (){
+			return this.eq(0);
+		},
+		last: function (){
+			return this.eq(this.length - 1);
+		},
+		map: function (fn){
+			if(!fn || !jQuery.isFunction(fn)){
+				throw "必须传递一个回调函数！";
+			}
+			return jQuery(jQuery.map(this, fn));
+		},
+		slice: function (){
+			return jQuery(call_slice.apply(jQuery.toArray(this), arguments));
+		},
+		splice: function (){
+			return call_splice.apply(this, arguments);
+		},
+		has: function (){},
+		not: function (){}	
+	});
 
 
 	window.$ = window.jQuery = jQuery;
