@@ -366,11 +366,16 @@
 				that = this,
 				ret = true;
 			that.each(function(index, ele) {
+				var breakNow = false;
 				eles.each(function(index2, ele2) {
 					if(ele === ele2){
+						breakNow = true;
 						return (ret = false);
 					}
 				});
+				if(breakNow){
+					return false;
+				}
 			});
 			return !ret;
 		},
@@ -415,16 +420,124 @@
 			if(ret.length === 0){
 				ret = null;
 			}
+			childrens = null;
 			return jQuery(ret, this);
 		},
-		/*获取元素的父元素，如果不传参则获取找到的第一个父元素，如果传参则一直找，
-		直到找到指定的那个父元素为止*/
-		parent: function (selector){},
+		/*获取元素的父元素，如果不传参则获取找到的第一个父元素，如果判断父元素是否符合
+		传入的参数的要求*/
+		parent: function (selector){
+			var ret = [];
+			this.each(function(index, ele) {
+				var parent = null;
+				if(ele.parentElement){
+					/*如果是w3c标准浏览器则使用parentElement来获取元素的父元素，这样就不用
+					考虑空白节点的问题了*/
+					parent = ele.parentElement;
+				}else{
+					/*如果是IE或不支持parentElement的，则使用parentNode来获取，因为有可能获取的会
+					是空白节点或注释节点，所以在这里清除下*/
+					parent = ele.parentNode;
+					while(parent && parent.nodeType !== 1){
+						parent = parent.parentNode;
+					}
+				}
+				if(selector){
+					if(jQuery.elementIsAvailableIn(parent, selector + ("")) && jQuery.inArray(ret, parent) == -1){
+						ret.push(parent);
+					}
+				}else{
+					if(jQuery.inArray(ret, parent) == -1){
+						ret.push(ele.parentElement);
+					}
+				}
+			});
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret, this);
+		},
 		/*获取原素的所有父元素，如果不传参则获取当前元素的所有父元素，如果传参则一直找直到找到指定的那个父元素
 		就不再往上找了，包括匹配到的那个*/
-		parents: function (selector){},
+		parents: function (selector){
+			var ret = [],
+				parents = this.parent();
+
+			/*首先默认当做没有传递参数，先获取当前元素的所有父元素，一直找到html标签为止*/
+			ret.push.apply(ret, jQuery.toArray(parents));
+			while(parents && parents.length && parents[parents.length - 1] !== null && parents[parents.length - 1].nodeName !== "HTML"){
+				parents = parents.parent();
+				ret.push.apply(ret, jQuery.toArray(parents));
+			}
+			//如果传递了参数则从获取的所有父元素中进行筛选，只筛选符合参数的父元素
+			if(selector){
+				var _parents = [];
+				jQuery.each(ret, function (index, item){
+					if(jQuery.elementIsAvailableIn(item, (selector + ""))){
+						_parents.push(item);
+					}
+				});
+				ret = _parents;
+			}
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret, this);
+		},
 		/*获取元素所有的父元素，直到遇到匹配的那个为止，不包括匹配到的那个*/
-		parentsUntil: function (selector){},
+		parentsUntil: function (selector){
+			var ret = [];
+
+			if(!selector){
+				//如果没有传递参数则获取当前元素的所有父元素
+				return this.parents();
+			}else{
+				/**TODO
+					传入参数的未完成
+				*/
+				var parents = this.parent(),
+					temp = [],//临时存储已经保存起来的父元素
+					breakNow = true;//用于判断何时退出循环
+				/*while(parents && parents.length && parents.length > 0 && parents[parents.length - 1] !== null){
+					parents.each(function(index, ele) {
+						//如果当前的这个父元素不是用户指定的则将其保存起来并继续往上查找
+						if(!jQuery.elementIsAvailableIn(ele, (selector + ""))){
+							//避免重复添加
+							if(jQuery.inArray(ret,ele) == -1){
+								ret.push(ele);
+								temp.push(ele);
+							}
+						}
+					});
+					console.log(temp);
+					if(temp.length == 0){
+						temp = null;
+					}
+
+					parents = jQuery(temp).parent();
+					
+				}*/
+				temp = null;
+				/* //这种方法会造成堆内存溢出
+				var parents = this.parent();
+				getParents(parents);
+				function getParents(parents){
+					var fn = arguments.callee;
+					parents.each(function(index, ele) {
+						//如果当前的这个父元素不是用户指定的则将其保存起来并继续往上查找
+						if(!jQuery.elementIsAvailableIn(ele, (selector + ""))){
+							ret.push(ele);
+							fn($(ele).parent());
+						}else{
+							return false;
+						}
+					});
+				}*/
+			}
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret, this);
+		},
 		/*返回父元素中第一个position值为relative或absolute的元素*/
 		offsetParent: function (){},
 		/*获取当前元素紧后面的第一个元素*/
@@ -457,13 +570,18 @@
 				hasClass = false;
 			this.each(function(index, ele) {
 				/*之所以在获取的className前后都加上一个空格是为了方便正则去匹配*/
-				var _className = (" " + ele.className + " ");
+				var _className = (" " + ele.className + " "),
+					breakNow = false;
 				$.each(classnameArr,function(i, item) {
 					if(new RegExp("\\b" + item + "\\b","g").test(_className)){
 						hasClass = true;
+						breakNow = true;
 						return false;
 					}
 				});
+				if(breakNow){
+					return false;
+				}
 			});
 			return hasClass;
 		}

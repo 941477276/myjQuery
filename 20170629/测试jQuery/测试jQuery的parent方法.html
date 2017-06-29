@@ -9,13 +9,13 @@
 		<li>我是第1个li元素</li>
 		<li>我是第4个li元素</li>
 		<li class="odd">我是第5个li元素</li>
-		<li id="test parent">
+		<li id="test">
 			我是第6个li元素
 			<p class="desc">我是p元素</p>
 		</li>
 		<li class="odd">我是第7个li元素</li>
 		<li>我是第8个li元素</li>
-		<div class="parent">
+		<div>
 			<p class="desc">我是p元素</p>
 		</div>
 	</ul>
@@ -24,11 +24,8 @@
 	<div>我是第3个div</div>
 	<script src="../../jquery/jquery.min.js"></script>
 	<script>
-		console.log($(".desc").parentsUntil());
-		console.log($(".desc").parentsUntil("li"));
-		console.log($(".desc").parentsUntil("ul"));
-		console.log($(".desc").parentsUntil(".parent"));
-		console.log($(".desc").parentsUntil("p"));
+		console.log($(".desc").parent().parent().parent());
+		console.log($(".desc").parent("ul"));
 	</script>
 </body>
 </html>
