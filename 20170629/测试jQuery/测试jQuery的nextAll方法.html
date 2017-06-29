@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<ul>
+		<li>我是第1个li元素</li>
+		<li>我是第4个li元素</li>
+		<li class="odd">我是第5个li元素</li>
+		<li id="test">
+			我是第6个li元素
+			<p class="desc">我是p元素</p>
+		</li>
+		<li class="odd">我是第7个li元素</li>
+		<li class="last">我是第8个li元素</li>
+	</ul>
+	<div>我是第1个div</div>
+	<div>我是第2个div</div>
+	<div>我是第3个div</div>
+	<script src="../../jquery/jquery.min.js"></script>
+	<script>
+		console.log($("#test").nextAll());
+		console.log($("#test").nextAll(".last"));
+		console.log($("#test").nextAll("last"));
+		console.log($("#test").nextAll("li"));
+	</script>
+</body>
+</html>

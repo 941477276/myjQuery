@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<ul>
+		<li>我是第1个li元素</li>
+		<li class="red blue color-white green">我是第4个li元素</li>
+		<li class="odd">我是第5个li元素</li>
+		<li id="test">我是第6个li元素</li>
+		<li class="odd">我是第7个li元素</li>
+		<li>我是第8个li元素</li>
+	</ul>
+	<div>我是第1个div</div>
+	<div>我是第2个div</div>
+	<div>我是第3个div</div>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		console.log($("li").hasClass("odd"));
+		console.log($("li").hasClass("test"));
+		console.log($("li").hasClass("blue red"));
+		console.log($("li").hasClass("color-white"));
+		console.log($("li").hasClass("color-white green"));
+		//console.log($("div").hasClass(document.querySelector("ul")));
+	</script>
+</body>
+</html>

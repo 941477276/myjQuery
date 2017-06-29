@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<ul>
+		<li>我是第1个li元素</li>
+		<li>我是第4个li元素</li>
+		<li class="odd">我是第5个li元素</li>
+		<li id="test">我是第6个li元素</li>
+		<li class="odd">我是第7个li元素</li>
+		<li>我是第8个li元素</li>
+	</ul>
+	<div>我是第1个div</div>
+	<div>我是第2个div</div>
+	<div>我是第3个div</div>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		console.log($("li").has(".odd"));
+		console.log($("li").has(".test"));
+		console.log($("li").has("#test"));
+		console.log($("li").has(document.getElementById("test")));
+		console.log($("div").has(document.querySelector("ul")));
+	</script>
+</body>
+</html>

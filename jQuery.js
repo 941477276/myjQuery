@@ -1,7 +1,7 @@
 ;(function (window,document,undefined){
 	/*jQuery工厂函数*/
-	function jQuery(selector,prevObject){
-		return new jQuery.fn.init(selector,prevObject);
+	function jQuery(selector,prevObject,baseEles){
+		return new jQuery.fn.init(selector,prevObject,baseEles);
 	}
 	var call_push = Array.prototype.push,
 		call_slice = Array.prototype.slice,
@@ -127,6 +127,22 @@
 				return false;
 			}
 			return true;
+		},
+		/*判断元素是否含有指定class、id或元素是否是指定的标签*/
+		elementIsAvailableIn: function (ele,selector){
+			if(!ele || !jQuery.isElement(ele)){
+				return false;
+			}
+			if(!selector){
+				return false;
+			}
+			if(selector.charAt(0) === "#"){
+				return ele.id === selector.substr(1);
+			}
+			if(selector.charAt(0) === "."){
+				return jQuery(ele).hasClass(selector.substr(1));
+			}
+			return ele.nodeName.toUpperCase() === selector.toUpperCase();
 		}
 	});
 	/*操作数组或伪数组*/
@@ -238,11 +254,14 @@
 			}
 		}
 	});
-	/*jQuery构造函数，入口函数*/
-	var init = jQuery.fn.init = function (selector,prevObject){
+	/*jQuery构造函数，入口函数。
+	selector为选择器，prevObject为当前元素的上一级元素（不一定为当前元素的父元素，可以理解为当前元素是通过谁查找的），
+	baseEles为查询前的元素*/
+	var init = jQuery.fn.init = function (selector,prevObject,baseEles){
 		var that = this;
 		/*如果传入的是""、false、undefined、null等转换后为false的值直接返回this*/
 		if(!selector){return this;}
+		baseEles = baseEles ? baseEles : [document];
 		/*处理传递字符串*/
 		if(typeof selector === "string" && !jQuery.isNumber(selector)){
 			//判断是否是HTML片段，如果是则生成dom元素
@@ -256,7 +275,13 @@
 				if(selector.charAt(0) === "#"){
 					call_push.apply(that, [document.getElementById(selector.substr(1))]);
 				}else{
-					call_push.apply(that, jQuery.toArray(document.querySelectorAll(selector)));
+					var ret = [];
+					jQuery.each(baseEles, function(index, ele) {
+						if(jQuery.isElement(ele) || ele === document){
+							ret.push.apply(ret,jQuery.toArray(ele.querySelectorAll(selector)));
+						}
+					});
+					call_push.apply(that, ret);
 				}
 			}
 			that.prevObject = {"0": document,"length": 1};
@@ -265,16 +290,16 @@
 		/*处理传递对象，数组，伪数组*/
 		if(jQuery.isLikeArray(selector)){
 			call_push.apply(that, jQuery.toArray(selector));
-			var prevObject = prevObject || {"0": document,"length": 1}
-			that.prevObject = prevObject;
+			var _prevObject = prevObject || {"0": document,"length": 1}
+			that.prevObject = _prevObject;
 			return this;
 		}
 		/*处理传递dom对象或其他基本数据类型*/
 		if(selector){
 			call_push.apply(that,[selector]);
 			if(selector.nodeType && selector.nodeName){
-				var prevObject = prevObject || {"0": document,"length": 1}
-				that.prevObject = prevObject;
+				var _prevObject = prevObject || {"0": document,"length": 1}
+				that.prevObject = _prevObject;
 			}
 			return this;
 		}
@@ -292,7 +317,7 @@
 		},
 		/*获取元素集合中指定index的元素*/
 		eq: function (index){
-			return jQuery(this.get(index), this);
+			return jQuery(this.get(index), this.prevObject);
 		},
 		/*获取元素集合中指定index的dom元素*/
 		get: function (index){
@@ -302,7 +327,7 @@
 		},
 		/*筛选指定表达式的元素*/
 		filter: function (express){
-			var eles = jQuery(express),
+			var eles = jQuery.isElement(express) ? jQuery(express) : jQuery(express, this, this.prevObject),
 				that = this,
 				ret = [];
 			that.each(function(index, ele) {
@@ -315,7 +340,7 @@
 			if(ret.length == 0){
 				ret = undefined;
 			}
-			return jQuery(ret);
+			return jQuery(ret, this.prevObject);
 		},
 		first: function (){
 			return this.eq(0);
@@ -327,18 +352,123 @@
 			if(!fn || !jQuery.isFunction(fn)){
 				throw "必须传递一个回调函数！";
 			}
-			return jQuery(jQuery.map(this, fn));
+			return jQuery(jQuery.map(this, fn), this.prevObject);
 		},
 		slice: function (){
-			return jQuery(call_slice.apply(jQuery.toArray(this), arguments));
+			return jQuery(call_slice.apply(jQuery.toArray(this), arguments), this.prevObject);
 		},
 		splice: function (){
-			return call_splice.apply(this, arguments);
+			return jQuery(call_splice.apply(this, arguments), this.prevObject);
 		},
-		has: function (){},
-		not: function (){}	
+		/*判断元素集合中是否有指定的元素、class、id*/
+		has: function (express){
+			var eles = jQuery(express),
+				that = this,
+				ret = true;
+			that.each(function(index, ele) {
+				eles.each(function(index2, ele2) {
+					if(ele === ele2){
+						return (ret = false);
+					}
+				});
+			});
+			return !ret;
+		},
+		/*获取所有元素中与传入的express不符合的元素*/
+		not: function (express){
+			var eles = jQuery(express),
+				that = this;
+			/**TODO
+				目前IE8不能将指定项删除，但是length会改变
+			*/
+			that.each(function(index, ele) {
+				eles.each(function(index2, ele2) {
+					if(ele == ele2){
+						call_splice.call(that,index,1);
+					}
+				});
+			});
+			return that;
+		}	
 	});
 
+	/*遍历查找（遍历元素）*/
+	jQuery.fn.extend({
+		/*获取元素的子元素*/
+		children: function (selector){
+			var childrens = [],
+				ret = [];
+			this.each(function(index, ele) {
+				childrens.push.apply(childrens, jQuery.toArray(ele.children));
+			});
+			//如果未传参数，则获取当前元素的所有子元素
+			if(!selector){
+				ret = childrens;
+			}else if(typeof selector === "string"){
+			/*如果传入了参数则按条件进行筛选*/
+				$.each(childrens, function(index, ele) {
+					if(jQuery.elementIsAvailableIn(ele, selector)){
+						ret.push(ele);
+					}
+				});
+			}
+			if(ret.length === 0){
+				ret = null;
+			}
+			return jQuery(ret, this);
+		},
+		/*获取元素的父元素，如果不传参则获取找到的第一个父元素，如果传参则一直找，
+		直到找到指定的那个父元素为止*/
+		parent: function (selector){},
+		/*获取原素的所有父元素，如果不传参则获取当前元素的所有父元素，如果传参则一直找直到找到指定的那个父元素
+		就不再往上找了，包括匹配到的那个*/
+		parents: function (selector){},
+		/*获取元素所有的父元素，直到遇到匹配的那个为止，不包括匹配到的那个*/
+		parentsUntil: function (selector){},
+		/*返回父元素中第一个position值为relative或absolute的元素*/
+		offsetParent: function (){},
+		/*获取当前元素紧后面的第一个元素*/
+		next: function (selector){},
+		/*获取当前元素后面的所有元素*/
+		nextAll: function (selector){},
+		/*获取当前元素前面的第一个元素*/
+		prev: function (selector){},
+		/*获取当前元素前面的所有元素*/
+		prevAll: function (selector){},
+		/*指定元素后面的所有的同辈元素，直到遇到匹配的那个为止，不包括匹配到的那个*/
+		nextUntil: function (){},
+		/*指定元素前面的所有的同辈元素，直到遇到匹配的那个为止*/
+		prevUntil: function (){},
+		/*获取元素的子元素，包括文字和注释节点*/
+		contents: function (){},
+		/*终止在当前链的最新过滤操作，并返回匹配元素的以前状态*/
+		end: function (){},
+		/*查找当前元素下指定的所有后代元素*/
+		find: function (selector){},
+		/*获取元素的索引值*/
+		index: function (){}
+	});
+	
+	/*操作样式*/
+	jQuery.fn.extend({
+		/*判断元素是否有指定的class*/
+		hasClass: function (classname){
+			var classnameArr = classname.split(" "),
+				hasClass = false;
+			this.each(function(index, ele) {
+				/*之所以在获取的className前后都加上一个空格是为了方便正则去匹配*/
+				var _className = (" " + ele.className + " ");
+				$.each(classnameArr,function(i, item) {
+					if(new RegExp("\\b" + item + "\\b","g").test(_className)){
+						hasClass = true;
+						return false;
+					}
+				});
+			});
+			return hasClass;
+		}
+	});
+	
 
 	window.$ = window.jQuery = jQuery;
 })(window,document,undefined);
