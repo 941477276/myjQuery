@@ -464,7 +464,7 @@
 
 			/*首先默认当做没有传递参数，先获取当前元素的所有父元素，一直找到html标签为止*/
 			ret.push.apply(ret, jQuery.toArray(parents));
-			while(parents && parents.length && parents[parents.length - 1] !== null && parents[parents.length - 1].nodeName !== "HTML"){
+			while(parents && parents.length && parents[parents.length - 1] !== null){
 				parents = parents.parent();
 				ret.push.apply(ret, jQuery.toArray(parents));
 			}
@@ -491,32 +491,39 @@
 				//如果没有传递参数则获取当前元素的所有父元素
 				return this.parents();
 			}else{
-				/**TODO
-					传入参数的未完成
-				*/
-				var parents = this.parent(),
-					temp = [],//临时存储已经保存起来的父元素
-					breakNow = true;//用于判断何时退出循环
-				/*while(parents && parents.length && parents.length > 0 && parents[parents.length - 1] !== null){
-					parents.each(function(index, ele) {
-						//如果当前的这个父元素不是用户指定的则将其保存起来并继续往上查找
-						if(!jQuery.elementIsAvailableIn(ele, (selector + ""))){
-							//避免重复添加
-							if(jQuery.inArray(ret,ele) == -1){
-								ret.push(ele);
-								temp.push(ele);
-							}
+				var parents = this.parent();
+				parents.each(function(index, ele) {
+					//遍历每一个获取到的父元素，如果该父元素不是用户想匹配的那个则继续往上查找，找到后就不再往上查找了
+					if(!jQuery.elementIsAvailableIn(ele, (selector + ""))){
+						//避免重复添加
+						if(jQuery.inArray(ret,ele) == -1){
+							ret.push(ele);
 						}
-					});
-					console.log(temp);
-					if(temp.length == 0){
-						temp = null;
+						var tempParents = jQuery(ele).parent();
+						var temp2 = [];
+						while(tempParents.length && tempParents.length > 0 && tempParents[tempParents.length - 1]){
+							var breakNow = true;
+							tempParents.each(function(index2, ele2) {
+								if(!jQuery.elementIsAvailableIn(ele2, (selector + ""))){
+									//避免重复添加
+									if(jQuery.inArray(ret,ele2) == -1){
+										ret.push(ele2);
+										temp2.push(ele2);
+									}
+								}
+							});
+							//如果temp2.length == 0就说明已经找到顶了，即html元素的父元素
+							if(temp2.length == 0){
+								temp2 = null;
+								break;
+							}
+							/*如果temp2.length不等0就说明该元素还有父元素，并且该元素不是用户想匹配的那个元素，还可以继续往上找*/
+							tempParents = jQuery(temp2).parent();
+							temp2 = [];
+						}
 					}
-
-					parents = jQuery(temp).parent();
-					
-				}*/
-				temp = null;
+				});
+				parents = null;
 				/* //这种方法会造成堆内存溢出
 				var parents = this.parent();
 				getParents(parents);
