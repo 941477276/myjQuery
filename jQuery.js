@@ -284,13 +284,13 @@
 					call_push.apply(that, ret);
 				}
 			}
-			that.prevObject = {"0": document,"length": 1};
+			that.prevObject = {"0": document,"length": 1,"prevObject": null,"end": function (){return null}};
 			return this;
 		}
 		/*处理传递对象，数组，伪数组*/
 		if(jQuery.isLikeArray(selector)){
 			call_push.apply(that, jQuery.toArray(selector));
-			var _prevObject = prevObject || {"0": document,"length": 1}
+			var _prevObject = prevObject || {"0": document,"length": 1,"end": function (){return null}};
 			that.prevObject = _prevObject;
 			return this;
 		}
@@ -298,7 +298,7 @@
 		if(selector){
 			call_push.apply(that,[selector]);
 			if(selector.nodeType && selector.nodeName){
-				var _prevObject = prevObject || {"0": document,"length": 1}
+				var _prevObject = prevObject || {"0": document,"length": 1,"end": function (){return null}};
 				that.prevObject = _prevObject;
 			}
 			return this;
@@ -442,11 +442,11 @@
 					}
 				}
 				if(selector){
-					if(jQuery.elementIsAvailableIn(parent, selector + ("")) && jQuery.inArray(ret, parent) == -1){
+					if(parent && jQuery.elementIsAvailableIn(parent, selector + ("")) && jQuery.inArray(ret, parent) == -1){
 						ret.push(parent);
 					}
 				}else{
-					if(jQuery.inArray(ret, parent) == -1){
+					if(parent && jQuery.inArray(ret, parent) == -1){
 						ret.push(ele.parentElement);
 					}
 				}
@@ -472,7 +472,7 @@
 			if(selector){
 				var _parents = [];
 				jQuery.each(ret, function (index, item){
-					if(jQuery.elementIsAvailableIn(item, (selector + ""))){
+					if(item && jQuery.elementIsAvailableIn(item, (selector + ""))){
 						_parents.push(item);
 					}
 				});
@@ -546,29 +546,361 @@
 			return jQuery(ret, this);
 		},
 		/*返回父元素中第一个position值为relative或absolute的元素*/
-		offsetParent: function (){},
+		offsetParent: function (selector){
+			var ret = [];
+			this.each(function(index, ele) {
+				if(jQuery.isElement(ele)){
+					var offsetParent = ele.offsetParent;
+					if(selector){
+						//符合用户查找的要求
+						if(jQuery.elementIsAvailableIn(offsetParent, (selector + ""))){
+							if(jQuery.inArray(ret,offsetParent) == -1){
+								ret.push(ele.offsetParent);	
+							}
+						}else{
+							//如果不符合则继续向上查找，直到找到null为止
+							while((offsetParent = offsetParent.offsetParent) != null){
+								if(jQuery.elementIsAvailableIn(offsetParent, (selector + ""))){
+									if(jQuery.inArray(ret,offsetParent) == -1){
+										ret.push(ele.offsetParent);	
+									}
+								}
+							}
+						}
+					}else{
+						if(jQuery.inArray(ret,offsetParent) == -1){
+							ret.push(offsetParent);	
+						}
+					}
+				}
+			});
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*获取当前元素紧后面的第一个元素*/
-		next: function (selector){},
+		next: function (selector){
+			var ret = [];
+			//支持nextElementSibling的浏览器
+			if(document.createElement("div").nextElementSibling){
+				this.each(function(index, ele) {
+					var next = ele.nextElementSibling;
+					if(selector){
+						if(jQuery.elementIsAvailableIn(next, (selector + ""))){
+							if(next && jQuery.inArray(ret,next) == -1){
+								ret.push(next);
+							}
+						}
+					}else{
+						if(next && jQuery.inArray(ret,next) == -1){
+							ret.push(next);
+						}
+					}
+				});
+			}else{
+				//不支持nextElementSibling的浏览器或者说是IE9以下的浏览器
+				this.each(function(index, ele) {
+					var next = ele.nextSibling;
+					next = findNextElementSiblling(next);
+					if(selector){
+						if(jQuery.elementIsAvailableIn(next, (selector + ""))){
+							if(next && jQuery.inArray(ret,next) == -1){
+								ret.push(next);
+							}
+						}
+					}else{
+						if(next && jQuery.inArray(ret,next) == -1){
+							ret.push(next);
+						}
+					}
+				});
+				//查找节点的下一个兄弟节点，并且查找到的节点必须是元素节点
+				function findNextElementSiblling(ele){
+					var nextElementSiblling = ele;
+					if(!nextElementSiblling){return null;}
+					//如果传递进来的下一个兄弟节点是一个元素节点的话直接返回该节点
+					if(nextElementSiblling.nodeType === 1){
+						return nextElementSiblling;
+					}else{
+						while((nextElementSiblling = nextElementSiblling.nextSibling) && nextElementSiblling.nodeType !== 1){
+							if(nextElementSiblling == 1){
+								break;
+							}
+						}
+						return nextElementSiblling;
+					}
+				}
+			}
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*获取当前元素后面的所有元素*/
-		nextAll: function (selector){},
+		nextAll: function (selector){
+			var ret = [];
+			this.each(function(index, ele) {
+				//先获取到当前元素的所有兄弟元素（包括它自己），并把它们转换成数组
+				var childrenArr = selector ? jQuery.toArray($(ele).parent().children(selector + "")) : jQuery.toArray($(ele).parent().children()),
+ 					currentIndex = jQuery.inArray(childrenArr,ele);
+ 				/*如果没有传递参数则可以将当前元素及前面的元素全部干掉，然后剩下的就是当前元素的后面的所有兄弟元素了。
+ 				如果传递了参数就不可以这样，因为这样可能会导致杀不干净，即当前元素前面的元素杀不掉*/
+ 				if(!selector){
+	 				childrenArr.splice(0, (currentIndex + 1));
+	 				if(childrenArr.length > 0){
+	 					//ret.push.apply(ret, childrenArr);//使用这种方式会重复添加
+	 					jQuery.each(childrenArr, function (index2,item){
+	 						if(jQuery.inArray(ret, item) == -1){
+	 							ret.push(item);
+	 						}
+	 					});
+	 				}
+ 				}else{
+ 					jQuery.each(childrenArr, function(index, item) {
+ 						if(index > currentIndex){
+ 							if(jQuery.elementIsAvailableIn(item,(selector + "")) && jQuery.inArray(ret, item) == -1){
+	 							ret.push(item);
+	 						}
+ 						}
+ 					});
+ 				}
+			});
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*获取当前元素前面的第一个元素*/
-		prev: function (selector){},
+		prev: function (selector){
+			var ret = [];
+			//支持previousElementSibling的浏览器
+			if(document.createElement("div").previousElementSibling){
+				this.each(function(index, ele) {
+					var next = ele.previousElementSibling;
+					if(selector){
+						if(jQuery.elementIsAvailableIn(next, (selector + ""))){
+							if(next && jQuery.inArray(ret,next) == -1){
+								ret.push(next);
+							}
+						}
+					}else{
+						if(next && jQuery.inArray(ret,next) == -1){
+							ret.push(next);
+						}
+					}
+				});
+			}else{
+				//不支持previousElementSibling的浏览器或者说是IE9以下的浏览器
+				this.each(function(index, ele) {
+					var next = ele.previousSibling;
+					next = findPrevElementSiblling(next);
+					if(selector){
+						if(jQuery.elementIsAvailableIn(next, (selector + ""))){
+							if(next && jQuery.inArray(ret,next) == -1){
+								ret.push(next);
+							}
+						}
+					}else{
+						if(next && jQuery.inArray(ret,next) == -1){
+							ret.push(next);
+						}
+					}
+				});
+				//查找节点的下一个兄弟节点，并且查找到的节点必须是元素节点
+				function findPrevElementSiblling(ele){
+					var prevElementSiblling = ele;
+					if(!prevElementSiblling){return null;}
+					//如果传递进来的下一个兄弟节点是一个元素节点的话直接返回该节点
+					if(prevElementSiblling.nodeType === 1){
+						return prevElementSiblling;
+					}else{
+						while((prevElementSiblling = prevElementSiblling.previousSibling) && prevElementSiblling.nodeType !== 1){
+							if(prevElementSiblling == 1){
+								break;
+							}
+						}
+						return prevElementSiblling;
+					}
+				}
+			}
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*获取当前元素前面的所有元素*/
-		prevAll: function (selector){},
+		prevAll: function (selector){
+			var ret = [];
+			this.each(function(index, ele) {
+				//先获取到当前元素的所有兄弟元素（包括它自己），并把它们转换成数组
+				var childrenArr = jQuery.toArray($(ele).parent().children()),
+ 					currentIndex = jQuery.inArray(childrenArr,ele);
+
+ 				jQuery.each(childrenArr, function (index, item){
+ 					//如果传递了参数则先判断元素是否符合要求
+ 					if(selector){
+ 						//如果符合要求并且是当前这个元素前面的元素则添加进去
+ 						if(jQuery.elementIsAvailableIn(item,(selector + "")) && index < currentIndex && jQuery.inArray(ret, item) == -1){
+							ret.push(item);
+						}
+ 					}else{
+ 						//如果没有传递参数，并且遍历到的这个元素是当前元素前面的元素则添加进去
+ 						if(index < currentIndex && jQuery.inArray(ret, item) == -1){
+							ret.push(item);
+						}
+ 					}
+ 					if(index >= currentIndex){return false;}
+ 				});
+			});
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*指定元素后面的所有的同辈元素，直到遇到匹配的那个为止，不包括匹配到的那个*/
-		nextUntil: function (){},
+		nextUntil: function (selector){
+			//如果没有传递参数则获取当前元素后面的所有兄弟元素
+			if(!selector){
+				return jQuery(this.nextAll(), this);
+			}
+			var ret = [];
+			//如果传递了参数，则获取到匹配的那个兄弟元素为止，不包括匹配的那个兄弟元素
+			this.each(function(index, ele) {
+				//先获取到当前元素的所有兄弟元素（包括它自己），并把它们转换成数组
+				var allBrotherAndSelfArr = jQuery.toArray($(ele).parent().children()),
+					currentIndex = jQuery.inArray(allBrotherAndSelfArr, ele);
+				//从当前元素的下一个元素开始遍历
+				for(var i = (currentIndex + 1),len = allBrotherAndSelfArr.length; i < len; i ++){
+					var nextBrother = allBrotherAndSelfArr[i];
+					if(jQuery.elementIsAvailableIn(nextBrother,(selector + ""))){
+						break;
+					}
+					if(nextBrother && jQuery.inArray(ret,nextBrother) == -1){
+						ret.push(nextBrother);
+					}
+				}
+			});
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*指定元素前面的所有的同辈元素，直到遇到匹配的那个为止*/
-		prevUntil: function (){},
+		prevUntil: function (selector){
+			if(!selector){
+				return this.prevAll();
+			}
+			var ret = [];
+			//如果传递了参数，则获取到匹配的那个兄弟元素为止，不包括匹配的那个兄弟元素
+			this.each(function(index, ele) {
+				//先获取到当前元素的所有兄弟元素（包括它自己），并把它们转换成数组
+				var allBrotherAndSelfArr = jQuery.toArray($(ele).parent().children()),
+					currentIndex = jQuery.inArray(allBrotherAndSelfArr, ele);
+				/*因为是获取元素的前面的兄弟元素，所以必须要倒着来遍历*/
+				for(var i = allBrotherAndSelfArr.length - 1; i >= 0; i --){
+					//如果i小于当前元素的下标，那么它肯定是当前元素前面的元素
+					if(i < currentIndex){
+						var prevBrother = allBrotherAndSelfArr[i];
+						if(jQuery.elementIsAvailableIn(prevBrother,(selector + ""))){
+							break;
+						}
+						if(prevBrother && jQuery.inArray(ret,prevBrother) == -1){
+							ret.push(prevBrother);
+						}
+					}
+				}
+			});
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*获取元素的子元素，包括文字和注释节点*/
-		contents: function (){},
+		contents: function (){
+			var ret = [];
+			this.each(function (index, ele){
+				ret.push.apply(ret, jQuery.toArray(ele.childNodes));
+			});
+			/*因为不会有重复的节点所以可以不用这种方式
+			this.each(function (index, ele){
+				jQuery.each(ele.childNodes, function (indexe,item){
+					if(jQuery.inArray(ret, item) == -1){
+						ret.push(item);
+					}
+				});
+			});*/
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*终止在当前链的最新过滤操作，并返回匹配元素的以前状态*/
-		end: function (){},
+		end: function (){
+			if(this.prevObject){
+				return this.prevObject;
+			}
+			return null;
+		},
 		/*查找当前元素下指定的所有后代元素*/
-		find: function (selector){},
+		find: function (selector){
+			var ret = [],
+				_selector = selector ? selector : "*";
+			this.each(function(index, ele) {
+				ret.push.apply(ret, ele.querySelectorAll(_selector));
+			});
+			if(ret.length == 0){
+				ret = null;
+			}
+			return jQuery(ret,this);
+		},
 		/*获取元素的索引值*/
-		index: function (){}
+		index: function (ele){
+			//如果不传参数则获取当前元素在当前元素的所有兄弟元素中的位置
+			if(!ele){
+				var allBrotherElesArr = jQuery.toArray($(this[0]).parent().children());
+				return jQuery.inArray(allBrotherElesArr, this[0]);
+			}
+			//如果传递参数了则获取指定元素在当前元素集合中的位置
+			//不管用户传递的是什么都将其包装下，这样就不需要过多的判断了，然后再获取第一个元素
+			var _ele = jQuery(ele)[0],
+				currentElesArr = jQuery.toArray(this);
+			return jQuery.inArray(currentElesArr, _ele);
+		}
 	});
 	
+	/*获取元素的HTML、text或值*/
+	jQuery.fn.extend({
+		/*设置或获取元素的html内容*/
+        html: function (html){
+        	if(!html || (html + "").length == 0){
+        		return this[0].innerHTML;
+        	}
+        	this.each(function(index, ele) {
+        		ele.innerHTML = (html + "");
+        	});
+        	return this;
+        },
+        /*设置或获取元素的文本内容*/
+        text: function (text){
+        	if(!text || (text + "").length == 0){
+        		var textArr = [];
+        		this.each(function(index, ele) {
+        			textArr.push(ele.innerText);
+        		});
+        		return textArr.join("");
+        	}
+        	this.each(function(index, ele) {
+        		ele.innerText = (text + "");
+        	});
+        	return this;
+        },
+        val: function (val){
+        	
+        }
+	});
+	
+
 	/*操作样式*/
 	jQuery.fn.extend({
 		/*判断元素是否有指定的class*/
