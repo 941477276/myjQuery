@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+	<style type="text/css">
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		.test-div{
+			width: 200px;
+			height: 100px;
+			padding: 20px;
+			margin: 20px;
+			background-color: #f60;
+		}
+		#test2{
+			position: absolute;
+			left: 300px;
+			top: 50px;
+		}
+	</style>
+</head>
+<body>
+	<div id="test1" class="test-div">我是一个div元素</div>
+	<div id="test2" class="test-div">我是一个div元素</div>
+	<script type="text/javascript" src="../../jquery/jquery.min.js"></script>
+	<script type="text/javascript">
+		console.log($("#test1").offset());
+		console.log($("#test2").offset());
+		/*console.log($("#test1").offset({
+			left: 30,
+			top: 30
+		}));*/
+		console.log($("#test2").offset({
+			left: 30,
+			top: 30
+		}));
+	</script>
+</body>
+</html>

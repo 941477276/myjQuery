@@ -896,23 +896,161 @@
         	return this;
         },
         val: function (val){
-        	
+        	//如果没有传递参数，则是获取元素的值
+        	if(val === undefined || val === null){
+        		var ele = this[0],
+        			returnvalue = "";
+        		if(ele.nodeName === "SELECT"){
+        			returnvalue = getAndSetSelectValue(ele);
+        		}else if(ele.nodeName === "OPTION"){
+        			returnvalue = getOptionValue(ele);
+        		}else if(ele.type === "checkbox"){
+        			//如果是checkbox，则获取所有选中的checkbox的值
+        			returnvalue = [];
+        			this.each(function(index, ele) {
+        				if(this.checked){
+        					returnvalue.push(this.value);
+        				}
+        			});
+        		}else{
+        			//如果元素不是select或option，则直接获取它们的value值
+        			returnvalue = ele.value;
+        		}
+        		return returnvalue;
+        	}
+        	//如果传递了参数则设置值
+        	this.each(function(index, ele) {
+        		if(ele.nodeName === "SELECT"){
+        			getAndSetSelectValue(ele,val);
+        		}else{
+        			this.value = (val + "");
+        		}
+        	});
+        	return this;
         }
 	});
+	/*获取或设置select元素的值*/
+	function getAndSetSelectValue(ele,val){
+		if(ele.nodeName !== "SELECT"){
+			return "";
+		}
+		//设置select元素的值
+		if(val !== undefined){
+			var options = ele.options,
+				multiple = ele.multiple;
+			for(var i = 0,len = options.length; i < len; i ++){
+				if(getOptionValue(options[i]) == (val + "")){
+					options[i].selected = true;
+					//如果不是多选的，则设置第一个后就退出循环
+					if(!multiple){
+						break;
+					}
+				}
+			}
+			return ele;
+		}
+		var returnvalue = "";
+		//select元素是多选的
+		if(ele.multiple){
+			returnvalue = [];
+			//w3c标准浏览器中多选下拉框有被选中的选项都可以通过selectedOptions来获取
+			if(ele.selectedOptions){
+				var selectedOptions = ele.selectedOptions;
+				for(var i = 0,len = selectedOptions.length; i < len; i ++){
+					returnvalue.push(getOptionValue(selectedOptions[i]));
+				}
+			}else{
+				var options = ele.options;
+				for(var i = 0,len = options.length; i < len; i ++){
+					var option = options[i];
+					if(option.selected){
+						returnvalue.push(getOptionValue(option));
+					}
+				}
+			}
+		}else{
+			returnvalue = ele.value;
+		}
+		return returnvalue;
+	}
+	/*获取或设置option元素的值*/
+	function getOptionValue(ele, val){
+		if(ele.nodeName !== "OPTION"){
+			return "";
+		}
+		//设置option元素的值
+		if(val !== undefined){
+			ele.value = (val + "");
+			return ele;
+		}
+		if(ele.hasAttribute){
+			return ele.hasAttribute("value") ? ele.value : "";
+		}else{
+			//IE浏览器判断option标签是否有value属性及获取option标签获取value属性值得方式
+			return ele.attributes["value"].specified ? ele.value : "";
+		}
+	}
 	
+	/*获取css属性值及转换驼峰命名*/
+	jQuery.extend({
+		/*获取css属性值*/
+		getCss: function (ele,cssAttr){
+			if(!jQuery.isElement(ele)){
+				throw "第一个参数必须是一个dom元素！";
+			}
+			if(cssAttr === undefined){
+				throw "必须传递需要获取的css属性名称！";
+			}
+			cssAttr = jQuery.convertToHump(cssAttr + "");
+			var val = "";
+			//w3c获取元素css属性值
+			if(window.getComputedStyle){
+				val = ele.ownerDocument.defaultView.getComputedStyle(ele,null)[cssAttr];
+			}else{
+				//IE获取元素css属性值
+				val = ele.currentStyle[cssAttr];
+			}
+			if(isNaN(parseFloat(val))){
+				return val;
+			}else{
+				return parseFloat(val);
+			}
+		},
+		/*将background-color、-webkit-、-moz等转换成驼峰命名*/
+		convertToHump: function (name){
+			name = (name + "");
+			name = name.charAt(0) == "-" ? name.substr(1) : name;
+			return name.replace(/\-(\w{1})/g, function (matchedStr, g1){
+				return g1.toUpperCase();
+			});
+		}
+	});
+
 
 	/*操作样式*/
 	jQuery.fn.extend({
 		/*判断元素是否有指定的class*/
 		hasClass: function (classname){
-			var classnameArr = classname.split(" "),
+			var classnameArr = (classname + " ").split(" "),
 				hasClass = false;
 			this.each(function(index, ele) {
-				/*之所以在获取的className前后都加上一个空格是为了方便正则去匹配*/
-				var _className = (" " + ele.className + " "),
+				var _className = ele.className.split(" "),
 					breakNow = false;
+				//确保元素一开始就没有class的情况也能判断正确
+				if(_className.length == 1 && (_className[0] == "" || _className[0] == " ")){
+					return false;
+				}
 				$.each(classnameArr,function(i, item) {
+					/*//使用这种方法，在匹配bg-red等class时就会出错，因为"-"符号在正则中是连接符
+						//目前还没找到转义"-"字符的方法
 					if(new RegExp("\\b" + item + "\\b","g").test(_className)){
+						hasClass = true;
+						breakNow = true;
+						return false;
+					}*/
+					//如果用户传递不是字符串，则将其转成字符串
+					item = (item + "");
+					if(item.length > 0 && jQuery.inArray(_className, item) != -1){
 						hasClass = true;
 						breakNow = true;
 						return false;
@@ -923,7 +1061,134 @@
 				}
 			});
 			return hasClass;
+		},
+		/*添加样式*/
+		addClass: function (classname){
+			if(classname === undefined){
+				return this;
+			}
+			var classnameArr = (classname + "").split(" ");
+			//支持classList的浏览器则使用classList来操作样式
+			if(document.createElement("div").classList){
+				this.each(function(index, ele) {
+					var classList = ele.classList;
+					jQuery.each(classnameArr, function (index, classname){
+						if(!classList.contains(classname)){
+							ele.classList.add(classname);
+						}
+					});
+				});
+			}else{
+				//IE9及以下IE浏览器或不支持classList的元素使用这种方式添加class
+				this.each(function(index, ele) {
+					var eleClassname = ele.className || "";
+					jQuery.each(classnameArr, function (index2, classname){
+						if(!$(ele).hasClass(classname)){
+							eleClassname += (" " + classname);
+						}
+					});
+					ele.className = eleClassname;
+				});
+			}
+			return this;
+		},
+		/*移除样式*/
+		removeClass: function (classname){
+			//如果没有传递参数则移除元素的所有class
+			if(!classname){
+				this.each(function(index, ele) {
+					this.className = "";
+				});
+				return this;
+			}
+			var classnameArr = (classname + "").split(" ");
+			//支持classList的浏览器则使用classList来操作样式
+			if(document.createElement("div").classList){
+				this.each(function(index, ele) {
+					var classList = ele.classList;
+					jQuery.each(classnameArr, function (index, classname){
+						if(classList.contains(classname)){
+							ele.classList.remove(classname);
+						}
+					});
+				});
+			}else{
+				//IE9及以下IE浏览器或不支持classList的元素使用这种方式移除class
+				this.each(function(index, ele) {
+					var eleClassname = (ele.className || "").split(" ");
+					jQuery.each(classnameArr, function (index2, classname){
+						var index = jQuery.inArray(eleClassname, classname);
+						if(index !== -1){
+							eleClassname.splice(index, 1);
+						}
+					});
+					ele.className = eleClassname.join(" ");
+				});
+			}
+			return this;
+		},
+		/*切换样式*/
+		toggleClass: function (classname){
+			if(!classname){
+				this.each(function(index, el) {
+					this.className = "";
+				});
+				return this;
+			}
+			var classnameArr = (classname + "").split(" ");
+			this.each(function(index, ele) {
+				var self = $(this);
+				jQuery.each(classnameArr, function (index2, classname){
+					if(self.hasClass(classname)){
+						self.removeClass(classname);
+					}else{
+						self.addClass(classname);
+					}
+				});
+			});
+			return this;
+		},
+		/*设置或获取元素的css属性值 */
+		css: function (){
+			var args = arguments,
+				argsLen = args.length;
+			if(argsLen == 1){
+				var cssAttr = args[0];
+				//如果只传递了一个参数，并且该参数还是字符串，则获取元素指定的css属性值
+				if(typeof cssAttr === "string"){
+					return jQuery.getCss(this[0], cssAttr);
+				}
+				//如果传递的参数是一个对象，则设置元素的css属性
+				if(jQuery.type(cssAttr) == "object" && !jQuery.isLikeArray(cssAttr)){
+					this.each(function(index, ele) {
+						jQuery.each(cssAttr, function(cssAttr, cssVal) {
+							ele.style[jQuery.convertToHump(cssAttr)] = cssVal;
+						});
+					});
+					return this;
+				}
+			}
+			if(argsLen >= 2){
+				var cssAttr = jQuery.convertToHump(args[0]),
+					cssVal = args[1];
+				this.each(function(index, ele) {
+					ele.style[cssAttr] = cssVal;
+				});
+			}
+			return this;
 		}
+	});
+	
+	/*获取或设置元素的宽度、高度、元素的位置*/
+	jQuery.fn.$.extend({
+		/*设置或获取元素的宽度*/
+		width: function (){},
+		/*设置或获取元素的高度*/
+		height: function (){},
+		/*设置或获取元素的位置*/
+		offset: function (){},
+		/*获取元素相对于它父元素的位置（父元素必须有position）*/
+		position: function (){}
 	});
 	
 

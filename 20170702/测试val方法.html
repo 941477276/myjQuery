@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<div><input type="text" id="input_text" value="默认值" /></div>
+	<div><input type="file" id="input_file" /></div>
+	<div><input type="password" id="input_pwd" value="我是默认的密码" /></div>
+	<div>
+		男<input type="radio" class="radio" name="gender" value="男" checked="checked" />
+		女<input type="radio" class="radio" name="gender" value="女" />
+	</div>
+	<div>
+		<p>兴趣爱好</p>
+		看电影<input type="checkbox" class="checkbox" name="hobby" value="movie" checked="checked" />
+		听音乐<input type="checkbox" class="checkbox" name="hobby" value="music" />
+		学习<input type="checkbox" class="checkbox" name="hobby" value="learning"  checked="checked" />
+		打代码<input type="checkbox" class="checkbox" name="hobby" value="code" />
+	</div>
+	<div>
+		<select name="city" id="city">
+			<option value="北京">北京</option>
+			<option value="上海">上海</option>
+			<option value="广州" selected="selected">广州</option>
+			<option value="深圳">深圳</option>
+			<option value="江西">江西</option>
+		</select>
+	</div>
+
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		console.log($("#input_text").val());
+		console.log($("#input_pwd").val());
+		console.log($("input[type=radio]").val());
+		console.log($("input[type=checkbox]").val());
+		console.log($("select").val());
+		console.log(document.querySelector("input[type=checkbox]").type);
+		/*$("#input_text,#input_pwd,#input_file,input[type=radio],input[type=checkbox],select").on("change", function (){
+				console.log($(this).val());
+		});*/
+		/*$("#input_text").val("sfasdfsd");
+		$("#input_pwd").val("43534543");
+		$("input[type=radio]").val("男");
+		$("input[type=checkbox]").val("movie");
+		$("select").val("上海");*/
+	</script>
+</body>
+</html>

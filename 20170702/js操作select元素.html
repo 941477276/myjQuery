@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+</head>
+<body>
+	<select id="test_select">
+		<option value="value-1">选项1</option>
+		<option value="value-2" selected="selected">选项2</option>
+		<option value="value-3">选项3</option>
+		<option value="value-4">选项4</option>
+		<option value="value-5">选项5</option>
+	</select>
+	<select id="test_select2" multiple="multiple">
+		<option value="value-1">选项1</option>
+		<option value="value-2" selected="selected">选项2</option>
+		<option value="value-3">选项3</option>
+		<option value="value-4">选项4</option>
+		<option value="value-5" selected="selected">选项5</option>
+		<option value="value-6">选项6</option>
+		<option value="value-7">选项7</option>
+	</select>
+	<input type="file" id="input_file">
+	<script type="text/javascript">
+		var select1 = document.getElementById("test_select"),	
+			select2 = document.getElementById("test_select2"),
+			option = select1[0];//因为select元素是一个伪数组所以可以这样获取select元素中指定的option
+		console.log(select1.selectedOptions);//获取选中的元素，IE不支持
+		console.log(select1.selectedIndex);//获取选中的元素的下标
+		console.log(select1.multiple);//判断下拉框是否多选
+		console.log(select1.length);//获取下拉框中option的元素的个数
+		console.log(option);
+		console.log(option.selected);//可以获取option是否被选中
+		console.log("====================================");
+
+		console.log(select2.selectedOptions);
+		console.log(select2.selectedIndex);
+		console.log(select2.multiple);
+		console.log(select2.length);
+		document.getElementById("input_file").onchange = function (){
+			console.log(this.value);
+		}
+	</script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+	<style type="text/css">
+		.bg-red{
+			background-color: red;
+		}
+		.green{
+			font-size: 30px;
+		}
+		.color-white{
+			color: #fff;
+		}
+		.red{
+			border: 5px solid #f60;
+		}
+	</style>
+</head>
+<body>
+	<ul>
+		<li>我是第1个li元素</li>
+		<li class="position-li">
+			<div>
+				<span>我是div里面的span</span>
+			</div>
+			我是第4个li元素
+		</li>
+		<li class="odd red color-white blue">我是第5个li元素</li>
+		<li id="test" class="parent">
+			我是第6个li元素
+			<p class="desc">我是p元素</p>
+		</li>
+		<li class="odd bg-red">我是第7个li元素</li>
+		<li>我是第8个li元素</li>
+		<div class="parent">
+			<p class="desc">我是p元素</p>
+		</div>
+	</ul>
+	<div>我是第1个div</div>
+	<div>我是第2个div</div>
+	<div>我是第3个div</div>
+	<script type="text/javascript" src="../jQuery.js"></script>
+	<script type="text/javascript">
+		//$("li").toggleClass();
+		//$("li").toggleClass('class_name');
+		//$("li").toggleClass('red');
+		//$("li").toggleClass('green color-white bg-red');
+		console.log($.convertToHump("-webkit-box-sizing"));
+		console.log($.convertToHump("background-color"));
+		console.log($.convertToHump(""));
+	</script>
+</body>
+</html>
