@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Document</title>
+    <style type="text/css">
+        .bg-red{
+            background-color: red;
+        }
+        .green{
+            font-size: 30px;
+        }
+        .color-white{
+            color: #fff;
+        }
+        .red{
+            border: 5px solid #f60;
+            width: 100%;
+            height: 50px;
+            color: #fff;
+            background-color: #f00;
+        }
+        li{
+            width: 100%;
+            height: 100%;
+        }
+        .position-li{
+            position: relative;
+        }
+        .bg-red{
+            position: relative;
+            margin: 50px;
+        }
+        span{
+            position: absolute;
+            top: 50px;
+            left: 60px;
+        }
+    </style>
+</head>
+<body>
+    <ul>
+        <li>我是第1个li元素</li>
+        <li class="position-li">
+            <div>
+                <span>我是div里面的span</span>
+            </div>
+            我是第4个li元素
+        </li>
+        <li id="red_box" class="odd red color-white blue">我是第5个li元素</li>
+        <li id="test" class="parent">
+            我是第6个li元素
+            <p class="desc">我是p元素</p>
+        </li>
+        <li class="odd bg-red">我是第7个li元素</li>
+        <li>我是第8个li元素</li>
+        <div class="parent">
+            <p class="desc">我是p元素</p>
+        </div>
+    </ul>
+    <div>我是第1个div</div>
+    <div>我是第2个div</div>
+    <div>我是第3个div</div>
+    <script type="text/javascript" src="../jQuery.js"></script>
+    <script type="text/javascript">
+        console.log($("li").position("SDfdsf"));
+        console.log($(".bg-red").position());
+        console.log($("span").position());
+        
+    </script>
+</body>
+</html>

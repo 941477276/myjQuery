@@ -1010,11 +1010,7 @@
 				//IE获取元素css属性值
 				val = ele.currentStyle[cssAttr];
 			}
-			if(isNaN(parseFloat(val))){
-				return val;
-			}else{
-				return parseFloat(val);
-			}
+			return val;
 		},
 		/*将background-color、-webkit-、-moz等转换成驼峰命名*/
 		convertToHump: function (name){
@@ -1162,7 +1158,12 @@
 				if(jQuery.type(cssAttr) == "object" && !jQuery.isLikeArray(cssAttr)){
 					this.each(function(index, ele) {
 						jQuery.each(cssAttr, function(cssAttr, cssVal) {
-							ele.style[jQuery.convertToHump(cssAttr)] = cssVal;
+							//如果传递的值不能转换成数字则直接使用这些值，如果可以转换成数字则转换成数字，但百分百的除外，如：100%、50%等
+							var _cssVal = (cssVal + "").charAt((cssVal + "").length - 1) == "%" ? (cssVal + "") : (isNaN(parseFloat(cssVal)) ? cssVal : (parseFloat(cssVal) + "px"));
+							if(_cssVal == undefined || _cssVal == null){
+								return;
+							}
+							ele.style[jQuery.convertToHump(cssAttr)] = _cssVal;
 						});
 					});
 					return this;
@@ -1178,19 +1179,181 @@
 			return this;
 		}
 	});
+	/*获取浏览器滚动条的位置*/
+	function scroll(){
+		if(window.pageXOffset && window.pageXOffset != undefined){
+			return {
+				top: window.pageXOffset,
+				left: window.offsetYOffset
+			}
+		}else if(document.compactMode == "CSS1Compat"){
+			//如果浏览器不是处于怪异模式，即网页有声明dtd（即有声明<!DOCTYPE html>）
+			return {
+				top: document.documentElement.scrollTop,
+				left: document.documentElement.scrollLeft	
+			}
+		}
+		//浏览器处于怪异模式
+		return {
+			top: document.body.scrollTop,
+			left: document.body.scrollLeft
+		}
+	}
 	
 	/*获取或设置元素的宽度、高度、元素的位置*/
-	jQuery.fn.$.extend({
+	jQuery.fn.extend({
 		/*设置或获取元素的宽度*/
-		width: function (){},
+		width: function (width){
+			//如果未传递参数则获取第一个元素的宽度
+			if(width != "auto" && isNaN(parseFloat(width))){
+				var _width = jQuery.getCss(this[0],"width");
+				/**TODO*/
+				/*在IE8中会有问题，如果元素设置的宽度为100%，那么获取到的就是100%，而如果元素的宽度为auto则可以获取到该元素的宽度，
+				所以在这里做个兼容，但对于10%、50%这种就没办法了，还有待解决*/
+				if(_width === "100%"){
+					this[0].style.width = "auto";
+					_width = jQuery.getCss(this[0],"width");
+				}
+				return isNaN(parseFloat(_width)) ? this[0].offsetWidth : parseFloat(_width);
+			}
+
+			if(width != "auto" && (width + "").charAt(width.length - 1) != "%"){
+				width = parseFloat(width) + "px";
+			}
+			this.each(function (){
+				//IE8中如果设置宽度为50%，则必须将其转成字符串才能添加上去
+				this.style.width = (width + "");
+			});
+			return this;
+		},
 		/*设置或获取元素的高度*/
-		height: function (){},
+		height: function (height){
+			//如果未传递参数则获取第一个元素的宽度
+			if(height != "auto" && isNaN(parseFloat(height))){
+				var _height = jQuery.getCss(this[0],"height");
+				/**TODO*/
+				/*在IE8中会有问题，如果元素设置的高度为100%，那么获取到的就是100%，而如果元素的高度为auto则可以获取到该元素的高度，
+				所以在这里做个兼容，但对于10%、50%这种就没办法了，还有待解决*/
+				if(_height === "100%"){
+					this[0].style.height = "auto";
+					_height = jQuery.getCss(this[0],"height");
+				}
+				return isNaN(parseFloat(_height)) ? this[0].offsetHeight : parseFloat(_height);
+			}
+
+			if(height != "auto" && (height + "").charAt(height.length - 1) != "%"){
+				height = parseFloat(height) + "px";
+			}
+			this.each(function (){
+				this.style.height = (height + "");
+			});
+			return this;
+		},
 		/*设置或获取元素的位置*/
-		offset: function (){},
+		offset: function (offset){
+			//如果未传递参数，或传递到额参数不是一个对象的话则直接返回第一个元素距离浏览器最左边及最上边的距离
+			if(offset == undefined || (jQuery.type(offset) != "object" || jQuery.isLikeArray(offset))){
+				var returnvalue = {},
+					ele = this[0].offsetParent,
+					left = this[0].offsetLeft,
+					top = this[0].offsetTop;
+				while(ele != null){
+					left += ele.offsetLeft;
+					top += ele.offsetTop;
+					ele = ele.offsetParent;
+				}
+
+				returnvalue.left = left;
+				returnvalue.top = top;
+				return returnvalue;
+			}
+			//如果传递了参数，并且该参数参数是一个对象，并且该对象中有left、top属性则设置这些元素的left、top值
+			if(offset == undefined && (offset.left == undefined || offet.top == undefined)){
+				return this;
+			}
+			var top = (offset.top + "").charAt((offset.top + "").length - 1) == "%" ? (offset.top + "") : (isNaN(parseFloat(offset.top)) ? offset.top : parseFloat(offset.top)),
+				left = (offset.left + "").charAt((offset.left + "").length - 1) == "%" ? (offset.left + "") : (isNaN(parseFloat(offset.left)) ? offset.left : parseFloat(offset.left))
+			this.each(function(index, ele) {
+				var self = $(ele);
+				if(self.css("position") == "static"){
+					self.css({
+						"position": "relative",
+						"top": top,
+						"left": left
+					});
+				}else{
+					self.css({
+						"top": top,
+						"left": left
+					});
+				}
+			});
+			return this;
+		},
 		/*获取元素相对于它父元素的位置（父元素必须有position）*/
-		position: function (){}
+		position: function (){
+			//获取元素相对于父元素的距离
+			var returnvalue = {},
+				ele = this[0];
+
+			returnvalue.left = ele.offsetLeft;
+			returnvalue.top = ele.offsetTop;
+			return returnvalue;
+		},
+		/*获取或设置元素滚动条距离顶端的位置*/
+		scrollTop: function (val){
+			//如果没有传递参数，则获取元素滚动条的位置
+			if(isNaN(parseFloat(val))){
+				var ele = this[0];
+				if(jQuery.isWindow(ele) || ele === document){
+					return scroll().top;
+				}
+				return ele.scrollTop;
+			}
+			/*TODO
+				给浏览器设置滚动条的位置在webkit引擎浏览器中不起作用
+				给元素设置滚动条的位置在所有浏览器中都不起作用*/
+			val = isNaN(parseFloat(val)) ? 0 : parseFloat(val);
+			this.each(function(index, ele) {
+				if(!jQuery.isWindow(ele) && ele !== document){
+					ele.scrollTop = val + "px";
+				}else{
+					window.scrollTo(0,val);
+				}
+			});
+			return this;
+		},
+		/*获取或设置元素滚动条距离最左端的位置*/
+		scrollLeft: function (val){
+			//如果没有传递参数，则获取元素滚动条的位置
+			if(isNaN(parseFloat(val))){
+				var ele = this[0];
+				if(jQuery.isWindow(ele) || ele === document){
+					return scroll().left;
+				}
+				return ele.scrollLeft;
+			}
+			val = isNaN(parseFloat(val)) ? 0 : parseFloat(val);
+			this.each(function(index, ele) {
+				if(!jQuery.isWindow(ele) && ele !== document){
+					ele.scrollLeft = val + "px";
+				}else{
+					window.scrollTo(val,0);
+				}
+			});
+			return this;
+		}
+	});
+
+	/*操作元素节点属性及操作属性*/
+	jQuery.fn.$.extend({
+		//操作元素节点属性
+		attr: function (){},
+		//操作属性
+		prop: function (){}
 	});
 	
+		
 
 	window.$ = window.jQuery = jQuery;
 })(window,document,undefined);
