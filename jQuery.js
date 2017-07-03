@@ -1190,7 +1190,6 @@
 		/*获取元素相对于它父元素的位置（父元素必须有position）*/
 		position: function (){}
 	});
-	
 
 	window.$ = window.jQuery = jQuery;
 })(window,document,undefined);
