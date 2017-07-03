@@ -1345,12 +1345,142 @@
 		}
 	});
 
+	/*获取元素中以 data- 开头的所有节点及节点值*/
+	function getDataAttr(ele,attrName){
+		var ret = {},
+			attrs = ele.attributes;
+		for(var i = 0,len = attrs.length; i < len;i ++){
+			var attrAndVal = attrs[i],
+				attr = attrAndVal["name"],
+				val = attrAndVal["value"];
+			if(attrName){
+				if(/data\-/.test(attr) && attr === ("data-" + attrName)){
+					ret[attr.replace(/data\-/,"")] = val;
+					break;
+				}
+			}else{
+				if(/data\-/.test(attr)){
+					ret[attr.replace(/data\-/,"")] = val;
+				}
+			}
+		}
+		return ret;
+	}
+
 	/*操作元素节点属性及操作属性*/
-	jQuery.fn.$.extend({
+	jQuery.fn.extend({
+		//判断元素是否有指定的属性
+		hasAttr: function (attr){
+			if(typeof attr !== "string"){
+				return false;
+			}
+			var ele = this[0];
+			if(!jQuery.isElement(ele)){
+				return false;
+			}
+			if(ele.nodeName === "OPTION" && attr === "value"){
+				if(ele.hasAttribute){
+					return ele.hasAttribute("value");
+				}else{
+					//在IE中判断option元素是否有value元素时必须使用这种方式
+					return ele.attributes("value").specified;
+				}
+			}
+			return ele.hasAttribute(attr);
+		},
 		//操作元素节点属性
-		attr: function (){},
+		attr: function (){
+			var args = arguments,
+				argsLen = args.length;
+			/*如果只传递了一个参数，并且该参数是字符串，则获取元素指定的属性节点值。
+			如果传递的参数是一个对象，并且该对象不是数组、伪数组，则对元素进行设置属性节点*/
+			if(argsLen == 1){
+				var attrs = args[0];
+				if(typeof attrs === "string"){
+					if(!jQuery(this[0]).hasAttr(attrs)){
+						return "";
+					}else{
+						return this[0].getAttribute(attrs);
+					}
+				}
+				if(jQuery.type(attrs) == "object" && !jQuery.isLikeArray(attrs)){
+					this.each(function(index, ele) {
+						jQuery.each(attrs, function(attr, val) {
+							ele.setAttribute((attr + ""), val);
+						});
+					});
+				}
+				return this;
+			}
+			//如果传递了2个及以上参数，那么设置元素指定的属性节点值
+			var attr = args[0] + "",
+				val = args[1];
+			this.each(function(index, ele) {
+				ele.setAttribute((attr + ""), val);
+			});
+			return this;
+		},
 		//操作属性
-		prop: function (){}
+		prop: function (){
+			var args = arguments,
+				argsLen = args.length;
+			/*如果只传递了一个参数，并且该参数是字符串，则获取元素指定的属性节点值。
+			如果传递的参数是一个对象，并且该对象不是数组、伪数组，则对元素进行设置属性节点*/
+			if(argsLen == 1){
+				var attrs = args[0];
+				if(typeof attrs === "string"){
+					return this[0][attrs];
+				}
+				if(jQuery.type(attrs) == "object" && !jQuery.isLikeArray(attrs)){
+					this.each(function(index, ele) {
+						jQuery.each(attrs, function(attr, val) {
+							ele[(attr + "")] = val;
+						});
+					});
+				}
+				return this;
+			}
+			//如果传递了2个及以上参数，那么设置元素指定的属性节点值
+			var attr = args[0] + "",
+				val = args[1];
+			this.each(function(index, ele) {
+				ele[(attr + "")] = val;
+			});
+			return this;
+		},
+		//操作以 data-xxx 的节点属性
+		data: function (){
+			var args = arguments,
+				argsLen = args.length;
+			//如果不传参数则获取元素的所有以 data- 开头的节点属性
+			if(argsLen == 0){
+				return getDataAttr(this[0]);
+			}
+			
+			if(argsLen == 1){
+				var attrs = args[0];
+				//如果传了一个参数并且该参数是字符串类型的则获取元素的指定名字的以 data- 开头的节点属性
+				if(typeof attrs === "string"){
+					return getDataAttr(this[0], attrs)[attrs];
+				}
+				//如果传递的参数是一个对象，并且该对象不是数组、伪数组，则给该元素进行批量设置以 data- 开头的节点属性
+				if(jQuery.type(attrs) == "object" && !jQuery.isLikeArray(attrs)){
+					this.each(function(index, ele) {
+						jQuery.each(attrs, function (attr, val){
+							ele.setAttribute(("data-" + attr), val);
+						});
+					});	
+				}
+				return this;
+			}
+			//如果传递了2个及以上参数，则给该元素设置指定的以 data- 开头的节点属性
+			var attr = args[0],
+				val = args[1];
+			this.each(function(index, ele) {
+				ele.setAttribute(("data-" + attr), val);
+			});	
+			return this;
+		}
 	});
 	
 		
