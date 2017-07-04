@@ -254,6 +254,49 @@
 			}
 		}
 	});
+
+	/*处理dom树加载，dom树加载完毕后会立即执行传递的函数*/
+	jQuery.ready = function (fn){
+		if(!jQuery.isFunction(fn)){return;}
+		if(this.execQueue == undefined){
+			this.isReady = false;//判断dom树是否加载完毕
+		}
+		if(this.execQueue == undefined){
+			this.execQueue = [];//存放事件队列，如果同时调用了多次ready方法，那么就要将回调存储起来，等dom树加载完毕后一起执行
+		}
+		var that = this;
+		if(document.addEventListener){
+			document.addEventListener("DOMContentLoaded", function (){
+				fn.call(window);
+				document.removeEventListener("DOMContentLoaded", arguments.callee);
+			}, false);
+			return;
+		}else{
+			//IE8判断dom是否加载完毕可以使用元素的doScroll()方法来实现
+			this.execQueue.push(fn);
+			doScroll();
+		}
+		function doScroll(){
+			try{
+				document.documentElement.doScroll("left");
+			}catch(e){
+				//如果dom树没有加载完成就一直调用doScoll方法，直到加载完成为止
+				return setTimeout(arguments.callee, 20);
+			}
+			//走到这里说明dom树已经加载完毕了，dom树加载完毕后就可以执行回调函数了
+			doExec();
+		}
+		/*执行事件回调*/
+		function doExec(){
+			if(!that.isReady){
+				that.isReady = true;
+				while(that.execQueue.length > 0){
+					that.execQueue.shift().call(window);
+				}
+			}
+		}
+	}
+
 	/*jQuery构造函数，入口函数。
 	selector为选择器，prevObject为当前元素的上一级元素（不一定为当前元素的父元素，可以理解为当前元素是通过谁查找的），
 	baseEles为查询前的元素*/
@@ -293,6 +336,10 @@
 			var _prevObject = prevObject || {"0": document,"length": 1,"end": function (){return null}};
 			that.prevObject = _prevObject;
 			return this;
+		}
+		/*处理函数*/
+		if(jQuery.isFunction(selector)){
+			jQuery.ready(selector);
 		}
 		/*处理传递dom对象或其他基本数据类型*/
 		if(selector){
@@ -1482,11 +1529,221 @@
 			return this;
 		}
 	});
-<<<<<<< HEAD
-=======
+
+	//绑定事件
+	function bindEvent(ele, delegationSelector, eventType, callBack, one){
+		if(document.addEventListener){
+			//给元素绑定事件
+			ele.addEventListener(eventType, function (event){
+				var that = this,
+					target = event.target;
+				//循环遍历指定事件类型中存储的所有回调函数，然后依次调用它
+				jQuery.each(ele.eventCache[eventType], function(index, fn) {
+					//事件委托模式事件绑定
+					if(delegationSelector && (delegationSelector).length > 0){
+						//jQuery(delegationSelector)这里可能会造成一定的性能浪费，但目前还没想到更好的解决方案
+						jQuery.each(jQuery(delegationSelector), function(index2, item) {
+							if(target === item){
+								fn.call(item, event);
+								//如果one为true，则表示只绑定一次，然后就移除
+								if(one){
+									ele.eventCache[eventType].splice(index, 1);
+								}
+							}
+						}); 
+					}else{
+						//普通事件绑定
+						fn.call(that, event);
+						if(one){
+							ele.eventCache[eventType].splice(index, 1);
+						}
+					}
+				});
+			}, false);
+		}else if(document.attachEvent){
+			//IE浏览器使用attachEvent绑定事件有可能会造成内存溢出，但不使用这个方式而使用onxxx方式的话，很容易被人覆盖掉
+			ele.attachEvent(("on" + eventType), function (){
+				var event = window.event,
+					target = event.srcElement;
+				//统一阻止默认行为及阻止事件冒泡的方法
+				event.preventDefault = function (){
+					event.returnValue = false;
+				}
+				event.stopPropergation = function (){
+					event.calcelBubble = true;
+				}
+
+				//循环遍历指定事件类型中存储的所有回调函数，然后依次调用它
+				jQuery.each(ele.eventCache[eventType], function(index, fn) {
+					//事件委托模式事件绑定
+					if(delegationSelector && (delegationSelector).length > 0){
+						jQuery.each(jQuery(delegationSelector), function(index2, item) {
+							if(target === item){
+								fn.call(item, event);
+								if(one){
+									ele.eventCache[eventType].splice(index, 1);
+								}
+							}
+						}); 
+					}else{
+						//普通事件绑定
+						fn.call(ele, event);
+						if(one){
+							ele.eventCache[eventType].splice(index, 1);
+						}
+					}
+				});
+			});
+		}
+	}
+
+	/*事件绑定，这两个方法仅作为内部使用，外部要调用也是可以使用的*/
+	jQuery.extend({
+		/*绑定事件，该方法仅作为内部使用。ele代表给谁绑定事件，delegationSelector表示被委托元素的选择器（如果传递了该元素则使用事件委托绑定事件）。
+		eventType为事件类型，callBack为回调函数*/
+		bindEvent: function (ele,delegationSelector,eventType,callBack,one){
+			if(!jQuery.isElement(ele)){
+				throw "必须传递绑定事件的元素！";
+			}
+			if(!jQuery.isString(eventType) || eventType.length === 0){
+				throw "必须传递事件类型！";
+			}
+
+			callBack = jQuery.isFunction(callBack) ? callBack : function (){};
+			/*将所有的事件回调函数都保存到元素本身的eventCache属性中，这样就方便我们去操作这些回调函数*/
+			//如果元素本身没有eventCache，则说明还没有绑定过任何类型的事件，那么我们就给该元素绑定指定的事件，并把事件回调存储到元素本身的eventCache中
+			if(ele.eventCache == undefined){
+				ele.eventCache = {};
+
+				ele.eventCache[eventType] = [callBack];
+				bindEvent(ele, delegationSelector, eventType, callBack, one);
+			}else{
+				/*如果元素本身有了eventCache，那么判断这个eventCache中是否有指定类型事件的数组，如果没有则说明该元素还没有添加过该类型的事件，
+				那么就在eventCache中存储该事件类型，并存储事件回调函数。如果有则直接添加即可*/
+				if(ele.eventCache[eventType] != undefined){
+					/*如果元素已经绑定过一次指定类型的事件了，我们只需要把传递的事件回调函数存储到元素本身上的eventCache对象上即可，然后就会执行它了*/
+					ele.eventCache[eventType].push(callBack);
+				}else{
+					ele.eventCache[eventType] = [callBack];
+					bindEvent(ele, delegationSelector, eventType, callBack, one);
+				}
+			}
+			return ele;
+		},
+		/*解绑事件，该方法仅作为内部使用*/
+		offEvent: function (ele, eventType, callBack){
+			if(!jQuery.isElement(ele)){
+				throw "必须传递需要移除事件的dom元素！";
+			}
+			var argsLen = arguments.length,
+				eventCache = ele.eventCache;
+			//如果只传递了元素，则清空该元素的所有事件
+			if(argsLen == 1){
+				jQuery.each(eventCache, function(index, item) {
+					item.length = 0;
+				});
+			}else if(argsLen == 2){
+				//如果传递了指定事件类型，但未传递要移除哪个事件则移除所有的指定类型的回调
+				eventCache[eventType] != undefined ? (eventCache[eventType] = []) : 1;
+			}else if(argsLen == 3){
+				var events = eventCache[eventType];
+				//既传递了事件类型，又传递了指定回调函数，则删除指定事件类型中的指定回调函数
+				if(events.length > 0){
+					jQuery.each(events, function(index, fn) {
+						if(fn === callBack){
+							events.splice(index, 1);
+							return false;
+						}
+					});
+				}
+			}
+			return ele;
+		}
+	});
+	/*事件绑定，对外使用*/
+	jQuery.fn.extend({
+		/*绑定事件*/
+		on: function (eventType, delegationSelector, callBack){
+			//如果只传递了一个参数，并且该参数是一个对象，注意不是数组或伪数组，则说明用户可能想一次性绑定多个事件 
+			if(arguments.length == 1 && jQuery.type(eventType) == "object" && !jQuery.isLikeArray(eventType)){
+				var events = eventType;
+				this.each(function(index, ele) {
+					jQuery.each(events, function (eventName, cb){
+						jQuery.bindEvent(ele, "", (eventName + ""), cb);
+					});
+				});
+				return this;
+			}
+
+			if(jQuery.isFunction(delegationSelector)){
+				callBack = delegationSelector;
+				delegationSelector = "";
+			}
+			this.each(function(index, ele) {
+				jQuery.bindEvent(ele, delegationSelector, eventType, callBack);
+			});
+			return this;
+		},
+		/*移除事件*/
+		off: function (eventType, callBack){
+			this.each(function(index, ele) {
+				if(eventType != undefined && callBack != undefined){
+					jQuery.offEvent(ele, eventType, callBack);
+				}else if(eventType != undefined){
+					jQuery.offEvent(ele, eventType);
+				}else if(eventType == undefined){
+					jQuery.offEvent(ele);
+				}
+				
+			});
+			return this;
+		},
+		/*只绑定一次事件*/
+		one: function (eventType, fn){
+			if(!jQuery.isFunction(fn)){
+				throw "必须传递回调函数！";
+			}
+			this.each(function(index, ele) {
+				jQuery.bindEvent(ele, "", eventType, fn, true);
+			});
+			return this;
+		}
+	});
 	
-		
->>>>>>> 5cf6a1f92715607d6139ce3bac5e75cef843595b
+	/*添加便捷操作的事件方法*/
+	jQuery.each(( "blur focus focusin focusout load resize scroll unload click dblclick " +
+	"mousedown mouseup mousemove mouseover mouseout mouseenter mouseleave " +
+	"change select submit keydown keypress keyup error contextmenu" ).split(" "),function (index,eventName){
+		jQuery.fn[eventName] = function (fn){
+			fn = jQuery.isFunction(fn) ? fn : function (){};
+			this.each(function(index, ele) {
+				jQuery.bindEvent(ele, "", eventName, fn, false);
+			});
+		}
+	});
+
+	/*TODO
+		动画、动画这块的小算法暂未去研究，因此这里只做show、hide两个方法*/
+	jQuery.fn.extend({
+		//显示元素
+		show: function (){
+			this.each(function(index, ele) {
+				if(this._display == undefined){
+					this._display = $(this).css("display");
+				}
+				
+
+			});
+		},
+		//隐藏元素
+		hide: function (){
+			this.each(function(index, ele) {
+				this.style.display = "none";
+			});
+			return this;
+		}
+	})
+
 
 	window.$ = window.jQuery = jQuery;
 })(window,document,undefined);

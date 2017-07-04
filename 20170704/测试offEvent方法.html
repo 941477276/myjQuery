@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <style>
+            div{
+                width: 400px;
+                height: 300px;
+                background-color: #f2f2f2;
+                margin: 100px auto;
+            }
+        </style>
+    </head>
+    <body>
+        
+        <div id="test_div">我是一个div</div>
+
+        <script src="../jQuery.js"></script>
+        <script>
+            var testDiv = document.getElementById("test_div");
+            function fn1(){
+                console.log("我被触发了！");
+            }
+            $.bindEvent(testDiv, "", "click", function (e){
+                console.log("第一次绑定click事件，第一次点击");
+                console.log(this);
+            });
+            $.bindEvent(testDiv, "", "click", fn1);
+            $.bindEvent(testDiv, "", "mouseenter", function (){
+                console.log("第一次绑定mouseenter事件，第一次移入");
+                console.log(this);
+            });
+            $.bindEvent(testDiv, "", "mouseleave", function (){
+                console.log("第一次绑定mouseleave事件，第一次移出");
+                console.log(this);
+            });
+
+            $.bindEvent(testDiv, "", "click", function (){
+                console.log("第二次绑定click事件，其实没有真正绑定");
+                console.log(this);
+            });
+            $.bindEvent(testDiv, "", "mouseenter", function (){
+                console.log("第二次绑定mouseenter事件，其实没有真正绑定");
+                console.log(this);
+            });
+            $.bindEvent(testDiv, "", "mouseleave", function (){
+                console.log("第二次绑定mouseleave事件，其实没有真正绑定");
+                console.log(this);
+            });
+
+
+
+            //移除所有事件
+           /* $.offEvent(testDiv);*/
+           //移除指定事件类型中的所有事件
+           /*$.offEvent(testDiv, "mouseenter");*/
+           //移除指定事件类行动的指定事件
+           $.offEvent(testDiv, "click", fn1);
+        </script>
+    </body>
+</html>

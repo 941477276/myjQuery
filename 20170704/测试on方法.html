@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <style>
+            div{
+                width: 400px;
+                height: 260px;
+                background-color: #f2f2f2;
+                margin: 30px auto;
+            }
+        </style>
+    </head>
+    <body>
+        
+        <div id="test_div">我是一个div1</div>
+        <div id="test_div1">我是一个div2</div>
+        <div id="test_div2">我是一个div3</div>
+
+        <script src="../jQuery.js"></script>
+        <script>
+            /*$("div").on("click", function (){
+                console.log(this.innerHTML);
+            });*/
+
+            /*$("body").on("click", "div", function (){
+                console.log(this.innerHTML);
+            });*/
+
+            $("div").on({
+                "mouseenter": function (){
+                    console.log("鼠标移入元素！");
+                },
+                "click": function (){
+                    this.innerHTML = "我的下标是：" + $(this).index();
+                }
+            });
+        </script>
+    </body>
+</html>

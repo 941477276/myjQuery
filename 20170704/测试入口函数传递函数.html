@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+        <style>
+            div{
+                width: 400px;
+                height: 260px;
+                background-color: #f2f2f2;
+                margin: 30px auto;
+            }
+        </style>
+         <script src="../jQuery.js"></script>
+         <script>
+             $(function (){
+                console.log(111);
+             });
+             $(function (){
+                console.log(222);
+             });
+             $(function (){
+                console.log(333);
+             });
+             $(function (){
+                $("div").on("click", function (){
+                    console.log(this.innerHTML);
+                });
+             });
+         </script>
+    </head>
+    <body>
+        
+        <div id="test_div">我是一个div1</div>
+        <div id="test_div1">我是一个div2</div>
+        <div id="test_div2">我是一个div3</div>
+
+    
+    </body>
+</html>
