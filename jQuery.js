@@ -1728,21 +1728,28 @@
 		//显示元素
 		show: function (){
 			this.each(function(index, ele) {
-				if(this._display == undefined){
+				if(this._display == undefined && $(this).css("display") != "none"){
 					this._display = $(this).css("display");
 				}
-				
-
+				if(this._display == undefined){
+					this.style.display = "block";
+				}else{
+					this.style.display = this._display;
+				}
 			});
+			return this;
 		},
 		//隐藏元素
 		hide: function (){
 			this.each(function(index, ele) {
+				if(this._display == undefined && $(this).css("display") != "none"){
+					this._display = $(this).css("display");
+				}
 				this.style.display = "none";
 			});
 			return this;
 		}
-	})
+	});
 
 
 	window.$ = window.jQuery = jQuery;
