@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8" />
+	<title>Document</title>
+	<style>
+		*{
+			margin: 0;
+			padding: 0;
+		}
+		#test_div{
+			width: 50%;
+			height: 200px;
+			background-color: #f60;
+			padding: 50px;
+			border: 5px solid #f00;
+			margin: 10px;
+		}
+	</style>
+</head>
+<body>
+	<div id="test_div">我是一个div</div>
+	<script src="../../jquery/jquery.min.js"></script>
+	<script>
+		var eleDiv = document.getElementById("test_div");
+		console.log($(eleDiv).css("width"));
+		console.log($(eleDiv).width());
+	</script>
+</body>
+</html>
