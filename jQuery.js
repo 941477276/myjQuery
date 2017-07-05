@@ -1948,9 +1948,9 @@
 						ret = [];
 						var values = jQuery(ele).val();
 						for(var i = 0,len = values.length; i < len;i ++){
-				 			ret.push({
-				 				name: values[i]
-				 			});
+							var obj = {};
+							obj[name] = values[i];
+				 			ret.push(obj);
 				 		}
 					}else{
 						ret[name] = ele.value;
@@ -1969,9 +1969,9 @@
 			 		//下来框为多选的
 			 		ret = [];
 			 		for(var i = 0,len = values.length; i < len;i ++){
-			 			ret.push({
-			 				name: values[i]
-			 			});
+			 			var obj = {};
+						obj[name] = values[i];
+			 			ret.push(obj);
 			 		}
 			 	}
 			 	break;
@@ -1985,7 +1985,17 @@
 	/*表单序列化*/
 	jQuery.fn.extend({
 		//将表单序列化成参数形式的字符串
-		serialize: function (){},
+		serialize: function (){
+			var paramsArr = this.serializeArray(),
+				paramsStr = '';
+			jQuery.each(paramsArr, function (index, item){
+				for(var attr in item){
+					paramsStr += (attr + "=" + encodeURI(item[attr]) + "&");
+				}
+			});
+			paramsStr = paramsStr.substr(0, paramsStr.length - 1);
+			return paramsStr;
+		},
 		//将表单序列化成一个数组
 		serializeArray: function (){
 			var formEles = [],
