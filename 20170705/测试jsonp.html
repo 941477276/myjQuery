@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <script src="../jQuery.js"></script>
+        <script>
+            /*$.jsonp({
+                url: "jsonp.js",
+                callBackFn: "jQuery_cb"
+            });*/
+            $.jsonp({
+                data: {
+                    "page": 2,
+                    "count": 5
+                },
+                url: "jsonp.js",
+                callBackFn: "jQuery_cb"
+            });
+            function jQuery_cb(data){
+                console.log(data);
+            }
+        </script>
+    </body>
+</html>

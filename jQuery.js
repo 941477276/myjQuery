@@ -330,8 +330,8 @@
 			that.prevObject = {"0": document,"length": 1,"prevObject": null,"end": function (){return null}};
 			return this;
 		}
-		/*处理传递对象，数组，伪数组*/
-		if(jQuery.isLikeArray(selector)){
+		/*处理传递对象，数组，伪数组，加上!selector.nodeType && !selector.nodeName这两个判断是为了排除select元素*/
+		if(jQuery.isLikeArray(selector) && !selector.nodeType && !selector.nodeName){
 			call_push.apply(that, jQuery.toArray(selector));
 			var _prevObject = prevObject || {"0": document,"length": 1,"end": function (){return null}};
 			that.prevObject = _prevObject;
@@ -1751,6 +1751,272 @@
 		}
 	});
 
+	/*生成指定位数的随机字符串*/
+	function getUUID(count){
+		count = count || 32;
+		var chars = "";
+		for(;chars.length < count;){
+			chars += Math.random().toString(36).substr(2);
+		}
+		return chars.substr(0, count);
+	}
+
+	/*ajax操作*/
+	jQuery.extend({
+		/*ajax默认设置*/
+		_ajaxSetting: {
+			url: "",
+			type: "get",
+			dataType: "json",//返回的数据类型
+			contentType: "application/x-www-form-urlencoded",//如果为post请求则必须加上这个请求头
+			data: null,
+			async: true,//是否异步
+			cache: false,//是否缓存
+			timeout: 5000,//超时时间
+			callBackParam: "callBack",//回调函数参数名称
+			callBackFn: "",//jsonp时的回调函数名称
+			success: function (){},//成功回调
+			error: function (){},//失败回调
+			complete: function (){},//请求完成回调
+			beforeSend: function (){}//请求发送前回调
+		},
+		/*获取XMLHttpRequest对象*/
+		_getXhr: function (){
+			try{
+				return new XMLHttpRequest();//现代浏览器
+			}catch(e){
+				return new ActiveXObject("Msxml2.XMLHTTP");//IE6
+				try{
+					return new ActiveXObject("Microsoft.XMLHTTP");//IE5.5及更早版本的IE浏览器
+				}catch(e){
+					return null;
+				}
+			}
+		},
+		/*拼接参数，将一个对象拼接成地址栏中的参数的格式*/
+		_jointParam: function (data){
+			if(data == undefined || jQuery.type(data) != "object" || jQuery.isLikeArray(data)){
+				return null;
+			}
+			var param = '';
+			for(var attr in data){
+				param += (attr + "") + "=" + encodeURI(data[attr]) + "&";
+			}
+			param = param.substr(0, (param.length - 1));
+			return param;
+		},
+		_notJsonp: function (options){
+			var _options = jQuery.extend({}, jQuery._ajaxSetting, options),
+				xhr = jQuery._getXhr(),//第一步，获取xhr对象
+				data = jQuery._jointParam(_options.data),
+				type = _options.type.toLowerCase(),
+				url = _options.url.length == 0 ? location.href : _options.url,
+				timer = null;
+			if(!_options.cache){
+				//加上时间戳为了避免缓存
+				url += "?_timestep=jQuery_" + new Date().getTime();
+			}
+			//第二步，打开与服务器的链接
+			if(type === "get"){//get请求
+				if(data && data.length > 0){
+					xhr.open("GET", (url + (!_options.cache ? "&" : "?") + data), _options.async);
+				}else{
+					xhr.open("GET", url, _options.async);
+				}
+				data = null;
+			}else if(type === "post"){
+				xhr.open("POST", url, _options.async);
+			}
+			//第三步：设置回调函数
+			xhr.onreadystatechange = function (){
+				if(this.readyState == 4){
+					_options.complete();
+					if(this.status >= 200 && this.status <= 304){
+						var responseText = this.responseText;
+						clearTimeout(timer);
+						if(_options.dataType.toLowerCase() == "json"){
+							responseText = jQuery.parseJson(responseText);
+						}
+						_options.success(responseText);
+					}
+				}
+			}
+			//第四步：发送请求
+			if(type === "post"){
+				xhr.setRequestHeader("Content-type", _options.contentType);
+			}
+			xhr.send(data);//get请求时发送的数据为null，如果不传可能会造成部分浏览器请求发送失败
+			//超时后直接中断请求
+			setTimeout(function (){
+				xhr.abort();
+			}, _options.timeout);
+		},
+		//jsonp请求
+		jsonp: function (options){
+			var _options = jQuery.extend({}, jQuery._ajaxSetting, options),
+				data = jQuery._jointParam(_options.data),
+				url = _options.url.length == 0 ? "" : _options.url,
+				callBackParam = _options.callBackParam || "callBack",
+				callBackFn = "";
+			if(!_options.callBackFn){
+				callBackFn = "jQuery_" + getUUID();
+				window[callBackFn] = function (data){
+					_options.success.call(window, data);
+				}
+			}else{
+				callBackFn = _options.callBackFn;
+			}
+			if(!_options.cache){
+				url += "?_timestep=jQuery_" + new Date().getTime();
+				url += (data == null ? "" : ("&" + data)) + "&" + callBackParam + "=" + callBackFn;
+			}else{
+				//加?_lyn_a=1参数是为了后面好连接参数，不然又要做判断
+				url += (data == null ? "?_lyn_a=1" : ("?" + data)) + "&" + callBackParam + "=" + callBackFn;
+			}
+			
+			//创建script标签
+			var scriptEle = document.createElement("script");
+			scriptEle.type = "text/javascript";
+			scriptEle.src = url;
+			scriptEle.onload = scriptEle.onreadystatechange = function (data){
+				if(!this.readyState || this.readyState === "loaded" || this.readyState === "complete"){
+					document.body.removeChild(scriptEle);
+					scriptEle.onload = scriptEle.onreadystatechange = null;
+				}
+			}
+			document.body.appendChild(scriptEle);
+		},
+		ajax: function (options){
+			if(options.type != undefined && (options.type + "").toLowerCase() === "jsonp"){
+				jQuery.jsonp(options);
+			}else if(options != undefined){
+				jQuery._notJsonp(options);
+			}
+		},
+		post: function (url,data,fn){
+			if(jQuery.isFunction(data)){
+				fn = data;
+			}
+			jQuery.ajax({
+				url: url,
+				type: "post",
+				data: data,
+				success: fn
+			});
+		},
+		get: function (url,data,fn){
+			if(jQuery.isFunction(data)){
+				fn = data;
+			}
+			jQuery.ajax({
+				url: url,
+				type: "get",
+				data: data,
+				success: fn
+			});
+		},
+		//将json字符串转换成json对象
+		parseJson: function (jsonStr){
+			if(!jQuery.isString(jsonStr) || jsonStr.length < 2){
+				return null;
+			}
+			if(window.JSON){
+				return JSON.parse(jsonStr);
+			}else{
+				return new Function ("return " + jsonStr + ";")();
+			}
+		}
+	});
+	
+	/*获取表单元素的值*/
+	function getFormElementValue(ele){
+		if(!jQuery.isElement(ele) || !ele.value){return null;}
+		var ret = {},
+			nodeName = ele.nodeName.toLowerCase(),
+			name = ele.name,
+			//排除的input标签
+			ignoreEle = {"button": 1,"submit": 1,"file": 1};
+		switch(nodeName){
+			case "input":
+				var type = ele.type;
+				if(!(type in ignoreEle)){
+					if(type == "radio" ){
+						if(ele.checked){
+							ret[name] = ele.value;
+						}
+					}else if(type == "checkbox"){
+						ret = [];
+						var values = jQuery(ele).val();
+						for(var i = 0,len = values.length; i < len;i ++){
+				 			ret.push({
+				 				name: values[i]
+				 			});
+				 		}
+					}else{
+						ret[name] = ele.value;
+					}
+				}
+				break;
+			case "textarea":
+				ret[name] = ele.value;
+			 	break;
+			case "select":
+			 	var values = jQuery(ele).val();
+			 	//下来框为单选的
+			 	if(typeof values === "string"){
+			 		ret[name] = values;
+			 	}else{
+			 		//下来框为多选的
+			 		ret = [];
+			 		for(var i = 0,len = values.length; i < len;i ++){
+			 			ret.push({
+			 				name: values[i]
+			 			});
+			 		}
+			 	}
+			 	break;
+			default: 
+				ret[name] = ele.value;
+				break;
+		}
+		return ret;
+	}
+
+	/*表单序列化*/
+	jQuery.fn.extend({
+		//将表单序列化成参数形式的字符串
+		serialize: function (){},
+		//将表单序列化成一个数组
+		serializeArray: function (){
+			var formEles = [],
+				ret = [];
+			//筛选form标签
+			this.each(function(index, ele) {
+				if(this.nodeName === "FORM"){
+					formEles.push(this);
+				}
+			});
+			jQuery.each(formEles, function (index,form){
+				//遍历每一个form标签下面的所有表单元素
+				jQuery.each(this.elements, function(index2, ele) {
+					var values = getFormElementValue(ele);
+					if(jQuery.isArray(values)){
+						for(var i = 0,len = values.length; i < len; i ++){
+							var value = values[i];
+							if(!jQuery.isEmptyObject(value)){
+								ret.push(value);
+							}
+						}
+					}else{
+						if(values && !jQuery.isEmptyObject(values)){
+							ret.push(values);	
+						}
+					}
+				});
+			});
+			return ret;
+		}
+	});
 
 	window.$ = window.jQuery = jQuery;
 })(window,document,undefined);

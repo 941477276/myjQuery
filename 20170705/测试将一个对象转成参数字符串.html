@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <script src="../jQuery.js"></script>
+        <script>
+            var data = {
+                "name": "张三",
+                "age": 23,
+                "gender": "男"
+            },
+            data1 = {
+                "0": "张三",
+                "1": 23,
+                "2": "男"
+            }
+            console.log($._jointParam(data));
+            console.log($._jointParam(data1));
+        </script>
+    </body>
+</html>

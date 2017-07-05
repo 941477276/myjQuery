@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8">
+    </head>
+    <body>
+        <form action="###">
+            <input type="text" name="name" value="name111" />
+            <input type="password" name="password" value="pwd111" />
+            <input type="checkbox" name="rabby" value="rabby111" checked="checked" />
+            <input type="checkbox" name="rabby" value="rabby222" checked="checked" />
+            <input type="checkbox" name="rabby" value="rabby333" checked="checked" />
+            <div>我是一个div</div>
+            <select name="city">
+                <option value="北京">北京</option>
+                <option value="上海" selected="selected">上海</option>
+                <option value="广州">广州</option>
+                <option value="深圳">深圳</option>
+                <option value="武汉">武汉</option>
+            </select>
+            <select name="character" multiple="multiple">
+                <option value="社会人士" selected="selected">社会人士</option>
+                <option value="医生">医生</option>
+                <option value="程序员" selected="selected">程序员</option>
+                <option value="文员">文员</option>
+                <option value="SEO专员">SEO专员</option>
+            </select>
+            <button type="submit">立即提交</button>
+        </form>
+        <form action="###">
+            <input type="text" name="name2" value="name222" />
+            <input type="password" name="password2" value="pwd222" />
+            <input type="radio" name="gender" value="男" checked="checked" />
+            <input type="radio" name="gender" value="女" />
+            <button type="submit">立即提交</button>
+        </form>
+    <ul>
+        foreach
+        <li></li>
+    </ul>
+        <script src="../jQuery.js"></script>
+        <script>
+            console.log($("form").serializeArray());
+        </script>
+    </body>
+</html>
