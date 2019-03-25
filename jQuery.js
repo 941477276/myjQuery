@@ -15,55 +15,53 @@
 
 	jQuery.extend = jQuery.fn.extend = function (){
 		var deep,target = arguments[0] ,original,current,i = 0,args = arguments,argsLen = args.length;
-		
-		if(typeof args[0] !== "boolean" && !args[0]){
-			return this;
-		}
-		//如果只传递了一个参数，则目标对象就是this
-		if(argsLen === 1 && typeof args[0] !== "boolean"){
-			target = this;
-		}
-		if(argsLen >= 2 && typeof args[0] !== "boolean"){
-			target = args[0];
-		}
-		//如果传递了多个参数，并且第一个参数为boolean类型，那么用户可能是想进行深度合并
-		if(argsLen >= 2 && typeof args[0] === "boolean"){
-			deep = args[0];
-			target = args[1];
-			i = 2;
-		}
 
-		for( ; i < argsLen; i ++){
-			var tempobj = args[i];
-			for(var attr in tempobj){
-				original = target[attr];
-				current = tempobj[attr];
-				var originalIsObject = typeof original === "object",
-					currentIsObject = typeof current === "object";
+		    if(typeof args[0] !== "boolean" && !args[0]){
+		      return this;
+		    }
+		    //如果只传递了一个参数，则目标对象就是this
+		    if(argsLen === 1 && typeof args[0] !== "boolean"){
+		      return this;
+		    }
+		    if(argsLen >= 2 && typeof args[0] !== "boolean"){
+		      target = args[0];
+		    }
+		    //如果传递了多个参数，并且第一个参数为boolean类型，那么用户可能是想进行深度合并
+		    if(argsLen >= 2 && typeof args[0] === "boolean"){
+		      deep = args[0];
+		      target = args[1];
+		      i = 2;
+		    }
 
-				if(original === current){
-					continue;
-				}
-				//进行深度合并
-				if(deep && originalIsObject && currentIsObject){
-					/*如果需要深度合并，则目标对象的值需是一个对象，并且当前对象的值也需是一个对象，
-					并且值不能是一个数组*/
-					var originalIsArray = ({}).toString.call(original) === "[object Array]",
-						currentIsArray = ({}).toString.call(current) === "[object Array]";
+		    for( ; i < argsLen; i ++){
+		      var tempobj = args[i];
+		      for(var attr in tempobj){
+			original = target[attr];
+			current = tempobj[attr];
+			var currentIsObject = typeof current === "object";
 
-					if(!originalIsArray && !currentIsArray){
-						/*因为这里的original是目标对象的一个属性值，并且original也是一个对象，它在内存中存储的也是一个地址，
-						所以改变original，目标对象的original也就改变了
-						*/
-						args.callee(deep, original, current);
-					}
-				}else{
-					target[attr] = current;
-				}
+			if(original === current){
+			  continue;
 			}
-		}
-		/*返回目标对象，如果目标对象是一个jQuery对象则可以链式编程，如果不是也可以方便操作*/
-		return target;
+			//进行深度合并
+			if(deep && currentIsObject){
+			  if (typeof original === 'undefined') {
+			    var currentType = ({}).toString.call(current);
+			    if (currentType === '[object Array]') {
+			      original = [];
+			    } else if (currentType === '[object Object]') {
+			      original = {};
+			    }
+			  }
+
+			  target[attr] = args.callee(deep, original, current);
+			}else{
+			  target[attr] = current;
+			}
+		      }
+		    }
+		    /*返回目标对象，如果目标对象是一个jQuery对象则可以链式编程，如果不是也可以方便操作*/
+		    return target;
 	}
 
 	var types = [],//存储原始数据类型
